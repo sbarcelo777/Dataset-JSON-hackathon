@@ -2,6 +2,8 @@ library(shiny)
 library(bslib)
 library(jsonlite)
 library(DT)
+library(dplyr)
+library(reactable)
 
 # Source the module files
 source("R/upload_module.R")
