@@ -6,12 +6,14 @@ library(shinyWidgets)
 viewerUI <- function(id) {
   ns <- NS(id)
   tagList(
+    muiDependency(),
+    tags$script(jsCode),
     card(
       full_screen = TRUE,
       card_header("View JSON Content"),
       selectInput(ns("file_select"), "Select a dataset", choices = NULL),
-      muiDependency(),
-      tags$script(jsCode),
+      # muiDependency(),
+      # tags$script(jsCode),
       reactableOutput(ns("json_table"))
     )
   )
@@ -76,21 +78,139 @@ const filterRange = (rows, columnId, filterValue) => {
     return value >= min && value <= max
   })
 }
+
+const muiExcelStyleFilterInHeader = (column, state) => {
+  const uniqueValues = Array.from(new Set(state.data.map(row => row[column.id])));
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [selectedValues, setSelectedValues] = React.useState(column.filterValue || []);
+
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleSelectAll = () => {
+    setSelectedValues(uniqueValues);
+    column.setFilter(uniqueValues);
+  };
+
+  const handleUnselectAll = () => {
+    setSelectedValues([]);
+    column.setFilter([]);
+  };
+
+  const handleSelectValue = (value) => {
+    const newSelected = selectedValues.includes(value)
+      ? selectedValues.filter(item => item !== value)
+      : [...selectedValues, value];
+
+    setSelectedValues(newSelected);
+    column.setFilter(newSelected);
+  };
+
+  const handleClickOutside = (event) => {
+    if (anchorEl && !anchorEl.contains(event.target) && !event.target.closest("[data-filter-button]")) {
+      handleMenuClose();
+    }
+  };
+
+  React.useEffect(() => {
+    document.addEventListener("click", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [anchorEl]);
+
+  return React.createElement(
+    "div",
+    { style: { display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer" }, onClick: handleMenuOpen },
+    [
+      React.createElement(
+        "div",
+        { style: { display: "flex", alignItems: "center", cursor: "pointer" }, onClick: handleMenuOpen, "data-filter-button": true },
+        [
+          React.createElement("span", { style: { fontSize: "12px", marginLeft: "8px" } }, "▼")
+        ]
+      ),
+      React.createElement(
+        MaterialUI.Menu,
+        {
+          anchorEl: anchorEl,
+          open: Boolean(anchorEl),
+          onClose: handleMenuClose
+        },
+        [
+          React.createElement(
+            MaterialUI.MenuItem,
+            {
+              onClick: handleSelectAll,
+              style: { display: "flex", justifyContent: "space-between" }
+            },
+            [
+              "Select All",
+              React.createElement(MaterialUI.Checkbox, { checked: selectedValues.length === uniqueValues.length })
+            ]
+          ),
+          React.createElement(
+            MaterialUI.MenuItem,
+            {
+              onClick: handleUnselectAll,
+              style: { display: "flex", justifyContent: "space-between" }
+            },
+            [
+              "Unselect All",
+              React.createElement(MaterialUI.Checkbox, { checked: selectedValues.length === 0 })
+            ]
+          ),
+          ...uniqueValues.map(value =>
+            React.createElement(
+              MaterialUI.MenuItem,
+              {
+                key: value,
+                onClick: () => handleSelectValue(value),
+                style: { display: "flex", justifyContent: "space-between" }
+              },
+              [
+                value,
+                React.createElement(MaterialUI.Checkbox, {
+                  checked: selectedValues.includes(value)
+                })
+              ]
+            )
+          )
+        ]
+      )
+    ]
+  );
+};
+
+const filterExcelStyleInHeader = (rows, columnId, filterValues) => {
+  return rows.filter(row => {
+    const value = row.values[columnId];
+    return filterValues.length === 0 || filterValues.includes(value);
+  });
+};
+
 ')
 
 # Définir une fonction pour créer la définition des colonnes
 createColDef <- function(data) {
   colDefs <- lapply(names(data), function(name) {
-    if (name == "Unique Subject Identifier") {
-      colDef(
-        sticky = "left",
-        style = list(
-          whiteSpace = "nowrap",
-          overflow = "hidden",
-          textOverflow = "ellipsis"
-        )
-      )
-    } else if (is.numeric(data[[name]])) {
+  #   if (name == "Unique Subject Identifier") {
+  #     colDef(
+  #       sticky = "left",
+  #       style = list(
+  #         whiteSpace = "nowrap",
+  #         overflow = "hidden",
+  #         textOverflow = "ellipsis"
+  #       )
+  #     )
+  #   } else
+      if (is.numeric(data[[name]])) {
       if (sum(!is.na(data[[name]])) > 1) {
         colDef(
           filterable = TRUE,
@@ -112,6 +232,17 @@ createColDef <- function(data) {
           )
         )
       }
+    } else if (is.character(data[[name]])) {  # For string columns
+      colDef(
+        filterable = TRUE,
+        filterMethod = JS("filterExcelStyleInHeader"),
+        filterInput = JS("muiExcelStyleFilterInHeader"),
+        style = list(
+          whiteSpace = "nowrap",
+          overflow = "hidden",
+          textOverflow = "ellipsis"
+        )
+      )
     } else {
       colDef(
         cell = JS("function(cellInfo) {
@@ -129,22 +260,43 @@ createColDef <- function(data) {
   colDefs
 }
 
+
 # Module 2: JSON Viewer Server
 viewerServer <- function(id, uploaded_files) {
   moduleServer(id, function(input, output, session) {
     
     observe({
-      files <- names(uploaded_files())
+      # files <- names(uploaded_files())
+      # labels <- t(sapply(uploaded_files(), function(x) c(label = x$label)))
+      # updateSelectInput(session, "file_select", 
+      #                   choices = c("Select a file" = "", labels))
+      
+      names <- t(sapply(uploaded_files(), function(x) c(name = x$name)))
       labels <- t(sapply(uploaded_files(), function(x) c(label = x$label)))
+      
+      # Concatenate name and label for the selectInput choices
+      choices <- setNames(paste0(names, "-", labels), paste0(names, " - ", labels))
+  
       updateSelectInput(session, "file_select", 
-                        choices = c("Select a file" = "", labels))
+                        choices = c("Select a file" = "", choices))
       
     })
     
     output$json_table <- renderReactable({
       req(input$file_select)
+      
+      # json_data <- uploaded_files() %>%
+      #   purrr::keep(~ .x$label == input$file_select) %>%
+      #   purrr::pluck(1)
+      
+      # Split the selected input back to `name` and `label`
+      selected_name_label <- strsplit(input$file_select, "-")[[1]]
+      selected_name <- selected_name_label[1]
+      selected_label <- selected_name_label[2]
+      
+      # Filter the correct dataset based on name and label
       json_data <- uploaded_files() %>%
-        purrr::keep(~ .x$label == input$file_select) %>%
+        purrr::keep(~ .x$name == selected_name && .x$label == selected_label) %>%
         purrr::pluck(1)
 
       
@@ -202,5 +354,7 @@ viewerServer <- function(id, uploaded_files) {
       #   datatable(df)
       # }
     })
+    
+    
   })
 }
