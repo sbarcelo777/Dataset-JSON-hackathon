@@ -171,6 +171,7 @@ viewerServer <- function(id, uploaded_files) {
       
       names(render_df) <- cols
       
+      
         reactable(render_df,
                 filterable = TRUE,
                 sortable = TRUE,
@@ -192,8 +193,7 @@ viewerServer <- function(id, uploaded_files) {
         )
       
       
-      
-      
+
       # if(is.data.frame(json_data)) {
       #   datatable(json_data)
       # } else if(is.list(json_data)) {
