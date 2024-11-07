@@ -15,7 +15,7 @@ uploadUI <- function(id) {
         card(
           full_screen = TRUE,
           card_header("Loaded JSON files:"),
-          textOutput(ns("JSON_list"))
+          uiOutput(ns("file_selection"))
         )
       )
     ),
@@ -24,7 +24,8 @@ uploadUI <- function(id) {
       tagList(    
         card(
           full_screen = TRUE,
-          card_header("Files metrics")
+          card_header("JSON Metadata"),
+          verbatimTextOutput(ns("json_content"))
         )
       )
     )
@@ -36,10 +37,10 @@ uploadUI <- function(id) {
 uploadServer <- function(id) {
   moduleServer(id, function(input, output, session) {
     uploaded_files <- reactiveVal(list())
-    JSON_list_text <- reactiveVal("No JSON files selected")
     
     observeEvent(input$json_files, {
       req(input$json_files)
+      files <- input$json_files
       files_list <- uploaded_files()
       
       # Process each uploaded file
@@ -57,17 +58,49 @@ uploadServer <- function(id) {
           files_list[[file_name]] <- content
         }
       }
-      
-      JSON_list_text(names(files_list))
-      
+    
       uploaded_files(files_list)
     })
     
-    output$JSON_list <- renderText({
-      # This can be any dynamic content
-      paste("You selected option:", JSON_list_text())
-      #paste("You selected option:", "no var")
+    # Generate radio buttons for file selection
+    output$file_selection <- renderUI({
+      files <- uploaded_files()
+      if (length(files) == 0) {
+        return(helpText("No files uploaded yet"))
+      }
+      
+      radioButtons(session$ns("selected_file"), 
+                   label = NULL,
+                   choices = names(files))
     })
+    
+    # Function to remove specific elements from a list
+    remove_specific_elements <- function(x) {
+      if (is.list(x)) {
+        # Remove specific elements if they exist
+        x$elements <- NULL
+        x$column <- NULL
+        x$columns <- NULL  # including 'columns' in case it's plural
+        x$row <- NULL
+        x$rows <- NULL    # including 'rows' in case it's plural
+        return(x)
+      }
+      return(x)
+    }
+    # Display selected JSON content
+    output$json_content <- renderPrint({
+      req(input$selected_file)
+      files <- uploaded_files()
+      # Get the selected file's content
+      selected_content <- files[[input$selected_file]]
+
+      # Remove specific elements from the content
+      modified_content <- remove_specific_elements(selected_content)
+      
+      # Pretty print the modified structure
+      str(modified_content)
+    })
+    
     return(uploaded_files)
   })
 }
