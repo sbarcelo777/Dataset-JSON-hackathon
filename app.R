@@ -25,9 +25,13 @@ ui <- page_navbar(
       uploadUI("upload")
     ),    
     nav_panel(
-      title = "Viewer",
+      title = "Viewer1",
       viewerUI("viewer")
-    )
+    ),
+    nav_panel(
+      title = "Viewer2",
+      # tidyviewerUI("tidyviewer")
+    ),
   )
 
 # Main Server
@@ -36,6 +40,7 @@ server <- function(input, output, session) {
 
   uploaded_files <- uploadServer("upload")
   viewerServer("viewer", uploaded_files)
+  # tidyviewerServer("tidyviewer", uploaded_files)
 }
 
 shinyApp(ui, server)
