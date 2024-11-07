@@ -1,4 +1,5 @@
 source("R/filterjs.R")
+library(tippy)
 
 # Module 2: JSON Viewer UI
 viewerUI <- function(id) {
@@ -25,6 +26,7 @@ viewerUI <- function(id) {
         full_screen = TRUE,
         card_header("View JSON Content"),
         selectInput(ns("file_select"), "Select a dataset", choices = NULL),
+        checkboxInput(ns("show_label"), "Show labels", value = FALSE),
         reactableOutput(ns("json_table"))
       )
     )
@@ -61,6 +63,7 @@ viewerServer <- function(id, uploaded_files) {
         purrr::pluck(1)
       
       cols <- c(sapply(json_data$columns, function(x) x$name))
+      labels <- c(sapply(json_data$columns, function(x) x$label))
       datatypes <- c(sapply(json_data$columns, function(x) x$dataType))
       
       render_df <- json_data$rows %>% 
@@ -81,6 +84,7 @@ viewerServer <- function(id, uploaded_files) {
       }, render_df, datatypes, SIMPLIFY = FALSE)
       
       names(render_df) <- cols
+      attr(render_df, "labels") <- setNames(labels, cols)  # Store labels as attribute
       render_df
     })
     
@@ -189,6 +193,53 @@ viewerServer <- function(id, uploaded_files) {
     output$json_table <- renderReactable({
       req(filtered_data())
       
+
+      
+      createColDef <- function(data) {
+        
+        column_labels <- attr(data, "labels")
+        label_list <- if (is.null(column_labels)) {
+          list()
+        } else if (is.vector(column_labels)) {
+          as.list(column_labels)
+        } else {
+          column_labels
+        }
+        
+        colDefs <- lapply(names(data), function(name) {
+          
+          if (is.numeric(data[[name]])) {
+            if (sum(!is.na(data[[name]])) > 1) {
+              colDef(
+                header = if (input$show_label) label_list[[name]] else name,
+                filterable = TRUE,
+                filterMethod = JS("filterRange"),
+                filterInput = JS("muiRangeFilter"),
+                style = list(
+                  whiteSpace = "nowrap",
+                  overflow = "hidden",
+                  textOverflow = "ellipsis"
+                )
+              )
+            }
+            
+            }else {
+              
+              colDef(
+                header = if (input$show_label) label_list[[name]] else name,
+                filterable = TRUE,
+                style = list(
+                  whiteSpace = "nowrap",
+                  overflow = "hidden",
+                  textOverflow = "ellipsis"
+                )
+              )
+            }
+        })
+        names(colDefs) <- names(data)
+        colDefs
+      }
+      
       reactable(filtered_data(),
                 filterable = TRUE,
                 sortable = TRUE,
@@ -206,7 +257,7 @@ viewerServer <- function(id, uploaded_files) {
                   highlightColor = "#f0f5f9",
                   cellPadding = "8px 12px"
                 ),
-                defaultPageSize = 20
+                # defaultPageSize = 20
       )
     })
   })
