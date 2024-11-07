@@ -1,7 +1,7 @@
 muiDependency <- function() {
   list(
     reactR::html_dependency_react(),
-    htmlDependency(
+    htmltools::htmlDependency(
       name = "mui",
       version = "5.6.3",
       src = c(href = "https://unpkg.com/@mui/material@5.6.3/umd/"),
