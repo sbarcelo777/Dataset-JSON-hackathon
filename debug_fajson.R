@@ -1,4 +1,4 @@
-json_str <- readr::read_file("Data/SDTM/ie.json")
+json_str <- readr::read_file("Data/SDTM/qsph.json")
 data <- jsonlite::fromJSON(json_str, simplifyVector = FALSE)
 
 # Extract column names and data types
@@ -15,18 +15,17 @@ ae <- data$rows %>%
   }) %>%
   dplyr::bind_rows()
 
-# for (i in 1:length(labels)){
-#   if (is.null(data[["rows"]][[1]][[i]])){
-#     #remove data[["rows"]][[1]][[i]]
-#   }
-#   
-# }
-# for (j in 1:nrow(ae)){
-#   for (j in 1:length(labels)){
-# # Remove all NULL elements from data[["rows"]][[1]] at once
-# data[["rows"]][[j]][[i]] <- Filter(Negate(is.null), data[["rows"]][[j]][[i]])
-#   }
-# }
+null <- c()
+if (ncol(ae) < length(labels)){
+  for(i in 1:length(labels)){
+    if (is.null(data[["rows"]][[1]][[i]])){
+      null <- c(null,i)
+    }
+  }
+  labels <- labels[-null]
+  cols <- cols[-null]
+  datatypes <- datatypes[-null]
+}
 
 # Apply each data type to the respective column using mapply
 ae[] <- mapply(function(column, dtype) {
@@ -44,4 +43,5 @@ ae[] <- mapply(function(column, dtype) {
 names(ae) <- cols
 attr(ae, "labels") <- setNames(labels, cols)  # Store labels as attribute
 
+reactable(ae)
 

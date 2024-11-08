@@ -8,15 +8,20 @@ viewerUI <- function(id) {
     muiDependency(),
     tags$script(jsCode),
     layout_columns(
-      col_widths = c(4, 8),
+      col_widths = c(3, 9),
       card(
         card_header("Filter Options"),
+        selectInput(
+          ns("file_select"), 
+          "Select a dataset",
+          choices = NULL,
+          width = "100%"),
         textAreaInput(
           inputId = ns("r_filter"),
           label = "Filter data using R expressions",
-          placeholder = "e.g., Age > 30 & Status == 'Active'",
+          placeholder = "e.g., AGE > 30 & STATUS == 'Active'",
           width = "100%",
-          rows = 2
+          rows = 1
         ),
         actionButton(ns("apply_filter"), "Apply Filter", class = "btn-primary mb-3"),
         # Active filters section
@@ -25,17 +30,32 @@ viewerUI <- function(id) {
       card(
         full_screen = TRUE,
         card_header("View JSON Content"),
-        selectInput(ns("file_select"), "Select a dataset", choices = NULL),
-        checkboxInput(ns("show_label"), "Show labels", value = FALSE),
-        reactableOutput(ns("json_table"))
+        layout_sidebar(
+          fillable = TRUE,
+          sidebar = sidebar(
+            open = FALSE,
+            htmlOutput(ns("info")),
+            checkboxInput(ns("show_label"), "Show labels", value = FALSE),
+            actionButton(ns("hide_window"), "Hide/Unhide columns", class = "btn-primary mb-3"
+                         , disabled = TRUE
+                         ),
+          ),
+          reactableOutput(ns("json_table"))
+        )
       )
     )
   )
 }
 
+
+
+
 # Module 2: JSON Viewer Server
 viewerServer <- function(id, uploaded_files) {
   moduleServer(id, function(input, output, session) {
+    
+    ns <- session$ns
+    
     # Current filtered dataset
     filtered_data <- reactiveVal(NULL)
     
@@ -43,9 +63,13 @@ viewerServer <- function(id, uploaded_files) {
     r_filters <- reactiveVal(list())
     
     observe({
+      if (is.null(uploaded_files()) || length(uploaded_files()) == 0) {
+        choices <- NULL
+      } else {
       names <- t(sapply(uploaded_files(), function(x) c(name = x$name)))
       labels <- t(sapply(uploaded_files(), function(x) c(label = x$label)))
-      choices <- setNames(paste0(names, "-", labels), paste0(names, " - ", labels))
+      choices <- setNames(paste0(names, "-->", labels), paste0(names, " - ", labels))
+      }
       updateSelectInput(session, "file_select", 
                         choices = c("Select a file" = "", choices))
     })
@@ -54,13 +78,18 @@ viewerServer <- function(id, uploaded_files) {
     get_current_dataset <- reactive({
       req(input$file_select)
       
-      selected_name_label <- strsplit(input$file_select, "-")[[1]]
+      selected_name_label <- strsplit(input$file_select, "-->")[[1]]
       selected_name <- selected_name_label[1]
       selected_label <- selected_name_label[2]
+      ex_selected_name_label <<- selected_name_label
+      ex_selected_name <<- selected_name
+      ex_selected_label <<- selected_label
+      
       
       json_data <- uploaded_files() %>%
         purrr::keep(~ .x$name == selected_name && .x$label == selected_label) %>%
         purrr::pluck(1)
+      
       
       cols <- c(sapply(json_data$columns, function(x) x$name))
       labels <- c(sapply(json_data$columns, function(x) x$label))
@@ -72,6 +101,18 @@ viewerServer <- function(id, uploaded_files) {
         }) %>%
         dplyr::bind_rows()
       
+      null <- c()
+      if (ncol(render_df) < length(labels)){
+        for(i in 1:length(labels)){
+          if (is.null(json_data[["rows"]][[1]][[i]])){
+            null <- c(null,i)
+          }
+        }
+        labels <- labels[-null]
+        cols <- cols[-null]
+        datatypes <- datatypes[-null]
+      }
+
       render_df[] <- mapply(function(column, dtype) {
         switch(
           dtype,
@@ -190,10 +231,70 @@ viewerServer <- function(id, uploaded_files) {
       filtered_data(filtered_result())
     })
     
+    
+    # INFO
+    output$info <- renderText({
+      req(input$file_select)
+      studyid <- unique(get_current_dataset()$STUDYID)
+      domain <- unique(get_current_dataset()$DOMAIN)
+      #render
+      paste0(
+        "<b>Study</b> ", studyid, "<br><hr style='border: 1px solid black;'>",
+        "<b>Domain</b> ", domain, "<br><hr style='border: 1px solid black;'>"
+      )
+    })
+    
+    
+    observeEvent(input$file_select, {
+      # files <- uploaded_files()
+      # req(input$file_select))
+      if(nchar(input$file_select) > 1){
+        updateActionButton(session, "hide_window", disabled = FALSE)
+      }
+    })
+    
+    # Hide/unHide
+    # Action lors du clic sur le bouton
+    observeEvent(input$hide_window, {
+      showModal(
+        modalDialog(
+          title = "Hidden columns",
+          div(
+            radioButtons(ns("columns"), 
+                               "Select columns you want to display",
+                               choices = c("Check All", "Uncheck all"),
+                               selected = "Check All"),
+            tags$hr(style = "margin: 10px 0;"),  # Ligne de séparation
+            checkboxGroupInput(ns("columns_vars"), 
+                               label = NULL,
+                               choices = names(filtered_data()),
+                               selected = names(filtered_data())),
+            footer = tagList(
+              modalButton("Dismiss")
+            )
+          )
+        )
+      )
+    })
+    
+    # Gestion de Check All / Uncheck all
+    observeEvent(input$columns, {
+
+      if (input$columns == "Check All") {
+        updateCheckboxGroupInput(session, "columns_vars",
+                                 selected = names(filtered_data()))
+      } else {
+        updateCheckboxGroupInput(session, "columns_vars",
+                                 selected = character(0))
+      }
+    })
+    
+    selected_vars <- reactiveVal(NULL)
+    
+    
+    # REACTABLE
     output$json_table <- renderReactable({
       req(filtered_data())
-      
-
       
       createColDef <- function(data) {
         
@@ -240,7 +341,7 @@ viewerServer <- function(id, uploaded_files) {
         colDefs
       }
       
-      reactable(filtered_data(),
+      reactable(filtered_data()[4:ncol(filtered_data())],
                 filterable = TRUE,
                 sortable = TRUE,
                 pagination = if (nrow(filtered_data()) > 20) TRUE else FALSE,
@@ -257,7 +358,7 @@ viewerServer <- function(id, uploaded_files) {
                   highlightColor = "#f0f5f9",
                   cellPadding = "8px 12px"
                 ),
-                # defaultPageSize = 20
+                defaultPageSize = 20
       )
     })
   })
