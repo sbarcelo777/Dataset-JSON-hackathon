@@ -1,5 +1,5 @@
 source("R/filterjs.R")
-library(tippy)
+source("R/moduleColumnSelector.R")
 
 # Module 2: JSON Viewer UI
 viewerUI <- function(id) {
@@ -39,6 +39,9 @@ viewerUI <- function(id) {
             actionButton(ns("hide_window"), "Hide/Unhide columns", class = "btn-primary mb-3"
                          , disabled = TRUE
                          ),
+            actionButton(ns("sticky"), "Stick columns", class = "btn-primary mb-3"
+                         , disabled = TRUE
+            )
           ),
           reactableOutput(ns("json_table"))
         )
@@ -55,6 +58,12 @@ viewerServer <- function(id, uploaded_files) {
   moduleServer(id, function(input, output, session) {
     
     ns <- session$ns
+    
+    # Reactive value for selected vars to show
+    selected_vars <- reactiveVal(NULL)
+    
+    # Reactive value for selected vars to stick
+    selected_vars_s <- reactiveVal(NULL)
     
     # Current filtered dataset
     filtered_data <- reactiveVal(NULL)
@@ -73,6 +82,8 @@ viewerServer <- function(id, uploaded_files) {
       updateSelectInput(session, "file_select", 
                         choices = c("Select a file" = "", choices))
     })
+    
+    #######################################################################################
     
     # Function to get the current dataset
     get_current_dataset <- reactive({
@@ -128,6 +139,32 @@ viewerServer <- function(id, uploaded_files) {
       attr(render_df, "labels") <- setNames(labels, cols)  # Store labels as attribute
       render_df
     })
+    
+    #######################################################################################
+    
+    # INPUT FILE SELECT
+    
+    # Initialize or update selected columns when dataset changes
+    observeEvent(input$file_select, {
+      req(input$file_select)
+      if(nchar(input$file_select) > 1) {
+        if (is.null(selected_vars()[[input$file_select]])) {
+          current_data <- get_current_dataset()
+          column_init <- names(current_data[5:ncol(current_data)])
+          current_selections <- selected_vars()
+          current_selections_s <- selected_vars_s()
+          current_selections[[input$file_select]] <- column_init
+          selected_vars(current_selections)
+          selected_vars_s(current_selections_s)
+        }
+        filtered_data(get_current_dataset())
+        updateActionButton(session, "hide_window", disabled = FALSE)
+        updateActionButton(session, "sticky", disabled = FALSE)
+      }
+    })
+    
+    
+    #INPUT APLLY FILTER 
     
     # Observer for the R filter button
     observeEvent(input$apply_filter, {
@@ -231,6 +268,7 @@ viewerServer <- function(id, uploaded_files) {
       filtered_data(filtered_result())
     })
     
+    ########################################################################
     
     # INFO
     output$info <- renderText({
@@ -244,58 +282,94 @@ viewerServer <- function(id, uploaded_files) {
       )
     })
     
+    ##########################################################################
     
-    observeEvent(input$file_select, {
-      # files <- uploaded_files()
-      # req(input$file_select))
-      if(nchar(input$file_select) > 1){
-        updateActionButton(session, "hide_window", disabled = FALSE)
-      }
-    })
+
     
-    # Hide/unHide
-    # Action lors du clic sur le bouton
+    # Hide/UnHide
     observeEvent(input$hide_window, {
+
+      column_choice <- names(filtered_data()[5:ncol(filtered_data())])
+      current_selected <- selected_vars()[[input$file_select]]
+
+      # pop_up(id = ns("pop_up"),current_selected = current_selected, column_choice = column_choice)
       showModal(
         modalDialog(
-          title = "Hidden columns",
+          title = "Column Visibility",
           div(
-            radioButtons(ns("columns"), 
-                               "Select columns you want to display",
-                               choices = c("Check All", "Uncheck all"),
-                               selected = "Check All"),
-            tags$hr(style = "margin: 10px 0;"),  # Ligne de séparation
-            checkboxGroupInput(ns("columns_vars"), 
-                               label = NULL,
-                               choices = names(filtered_data()),
-                               selected = names(filtered_data())),
-            footer = tagList(
-              modalButton("Dismiss")
+            div(
+              style = "margin-bottom: 15px;",
+            checkboxInput(ns("select_all"),
+                          "Select/Deselect All",
+                          value = length(current_selected) == length(column_choice)
+                          )
+            ),
+            div(
+              style = "max-height: 400px; overflow-y: auto;",
+              checkboxGroupInput(
+                ns("columns_vars"),
+                label = NULL,
+                choices = column_choice,
+                selected = current_selected
+              )
             )
-          )
+          ),
+          footer = tagList(
+            modalButton("X")
+          ),
+          size = "m"
         )
       )
     })
-    
-    # Gestion de Check All / Uncheck all
-    observeEvent(input$columns, {
 
-      if (input$columns == "Check All") {
+    observeEvent(input$select_all,{
+      column_choice <- names(filtered_data()[5:ncol(filtered_data())])
+      if (input$select_all) {
         updateCheckboxGroupInput(session, "columns_vars",
-                                 selected = names(filtered_data()))
+                                 choices = column_choice,
+                                 selected = column_choice)
       } else {
         updateCheckboxGroupInput(session, "columns_vars",
-                                 selected = character(0))
+                                 choices = column_choice,
+                                 selected = NULL)
       }
+    }, ignoreInit = TRUE)
+
+
+    # Gestion de Check All / Uncheck all
+    # observeEvent(input$columns, {
+    # 
+    #   if (input$columns == "Check All") {
+    #     updateCheckboxGroupInput(session, "columns_vars",
+    #                              selected = names(filtered_data()))
+    #   } else {
+    #     updateCheckboxGroupInput(session, "columns_vars",
+    #                              selected = character(0))
+    #   }
+    # })
+
+
+    # Update selected columns
+    observeEvent(input$columns_vars, {
+      req(input$file_select)
+      current_selections <- selected_vars()
+      current_selections[[input$file_select]] <- input$columns_vars
+      selected_vars(current_selections)
     })
-    
-    selected_vars <- reactiveVal(NULL)
-    
+
+    # selected_cols <- mod_column_selector_server(
+    #   "column_select",
+    #   filtered_data = filtered_data,
+    #   file_select = reactive(input$file_select)
+    # )
+
+
     
     # REACTABLE
     output$json_table <- renderReactable({
-      req(filtered_data())
+      req(filtered_data(), input$file_select)
       
+      ############################################# COL DEF FUNCTION
       createColDef <- function(data) {
         
         column_labels <- attr(data, "labels")
@@ -340,8 +414,11 @@ viewerServer <- function(id, uploaded_files) {
         names(colDefs) <- names(data)
         colDefs
       }
+      #################################################################
       
-      reactable(filtered_data()[4:ncol(filtered_data())],
+      selected_cols <- selected_vars()[[input$file_select]]
+
+      reactable(filtered_data()[,c("USUBJID",  selected_cols)],
                 filterable = TRUE,
                 sortable = TRUE,
                 pagination = if (nrow(filtered_data()) > 20) TRUE else FALSE,
@@ -361,5 +438,67 @@ viewerServer <- function(id, uploaded_files) {
                 defaultPageSize = 20
       )
     })
+    
+    
+    # Hide/UnHide
+    observeEvent(input$sticky, {
+      
+      column_choice_s <- names(filtered_data()[5:ncol(filtered_data())])
+      current_selected_s <- selected_vars_s()[[input$file_select]]
+      
+      # pop_up(id = ns("pop_up"),current_selected = current_selected, column_choice = column_choice)
+      showModal(
+        modalDialog(
+          title = "Column Visibility",
+          div(
+            div(
+              style = "margin-bottom: 15px;",
+              checkboxInput(ns("select_all_s"),
+                            "Select/Deselect All",
+                            value = length(current_selected_s) == length(column_choice_s)
+              )
+            ),
+            div(
+              style = "max-height: 400px; overflow-y: auto;",
+              checkboxGroupInput(
+                ns("columns_vars_s"),
+                label = NULL,
+                choices = column_choice_s,
+                selected = current_selected_s
+              )
+            )
+          ),
+          footer = tagList(
+            modalButton("X")
+          ),
+          size = "m"
+        )
+      )
+    })
+    
+    observeEvent(input$select_all_s,{
+      column_choice_s <- names(filtered_data()[5:ncol(filtered_data())])
+      if (input$select_all_s) {
+        updateCheckboxGroupInput(session, "columns_vars_s",
+                                 choices = column_choice_s,
+                                 selected = column_choice_s)
+      } else {
+        updateCheckboxGroupInput(session, "columns_vars_s",
+                                 choices = column_choice_s,
+                                 selected = NULL)
+      }
+    }, ignoreInit = TRUE)
+    
+    
+    
+    # Update selected columns
+    observeEvent(input$columns_vars_s, {
+      req(input$file_select)
+      current_selections_s <- selected_vars_s()
+      current_selections_s[[input$file_select]] <- input$columns_vars_s
+      selected_vars_s(current_selections_s)
+    })
+    
+    
   })
 }
