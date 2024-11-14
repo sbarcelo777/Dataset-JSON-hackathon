@@ -1,5 +1,5 @@
 source("R/filterjs.R")
-source("R/moduleColumnSelector.R")
+library(plotly)
 
 # Module 2: JSON Viewer UI
 viewerUI <- function(id) {
@@ -8,24 +8,39 @@ viewerUI <- function(id) {
     muiDependency(),
     tags$script(jsCode),
     layout_columns(
-      col_widths = c(3, 9),
-      card(
-        card_header("Filter Options"),
-        selectInput(
-          ns("file_select"), 
-          "Select a dataset",
-          choices = NULL,
-          width = "100%"),
-        textAreaInput(
-          inputId = ns("r_filter"),
-          label = "Filter data using R expressions",
-          placeholder = "e.g., AGE > 30 & STATUS == 'Active'",
-          width = "100%",
-          rows = 1
+      col_widths = c(3, 9), 
+      layout_column_wrap(
+        width = 1,  
+        heights_equal = "row",
+        card(
+          card_header("Filter Options"),
+          selectInput(
+            ns("file_select"), 
+            "Select a dataset",
+            choices = NULL,
+            width = "100%"),
+          textAreaInput(
+            inputId = ns("r_filter"),
+            label = "Filter data using R expressions",
+            placeholder = "e.g., AGE > 30 & STATUS == 'Active'",
+            width = "100%",
+            rows = 1
+          ),
+          actionButton(ns("apply_filter"), "Apply Filter", class = "btn-primary mb-3"),
+          uiOutput(ns("active_filters")),
         ),
-        actionButton(ns("apply_filter"), "Apply Filter", class = "btn-primary mb-3"),
-        # Active filters section
-        uiOutput(ns("active_filters"))
+        card(
+          full_screen = TRUE,
+          height = 350,
+          card_class = "my-custom-card",
+          card_header("Variables description"),
+          selectInput(
+            ns("var_select"), 
+            "Select a variable",
+            choices = NULL,
+            width = "100%"),
+          uiOutput(ns("var"))
+        )
       ),
       card(
         full_screen = TRUE,
@@ -36,12 +51,12 @@ viewerUI <- function(id) {
             open = FALSE,
             htmlOutput(ns("info")),
             checkboxInput(ns("show_label"), "Show labels", value = FALSE),
-            actionButton(ns("hide_window"), "Hide/Unhide columns", class = "btn-primary mb-3"
-                         , disabled = TRUE
-                         ),
-            actionButton(ns("sticky"), "Stick columns", class = "btn-primary mb-3"
-                         , disabled = TRUE
-            )
+            actionButton(ns("hide_window"), "Hide/Unhide columns", 
+                         class = "btn-primary mb-3",
+                         disabled = TRUE),
+            actionButton(ns("sticky"), "Stick/Unstick columns", 
+                         class = "btn-primary mb-3",
+                         disabled = TRUE)
           ),
           reactableOutput(ns("json_table"))
         )
@@ -92,10 +107,6 @@ viewerServer <- function(id, uploaded_files) {
       selected_name_label <- strsplit(input$file_select, "-->")[[1]]
       selected_name <- selected_name_label[1]
       selected_label <- selected_name_label[2]
-      ex_selected_name_label <<- selected_name_label
-      ex_selected_name <<- selected_name
-      ex_selected_label <<- selected_label
-      
       
       json_data <- uploaded_files() %>%
         purrr::keep(~ .x$name == selected_name && .x$label == selected_label) %>%
@@ -160,6 +171,7 @@ viewerServer <- function(id, uploaded_files) {
         filtered_data(get_current_dataset())
         updateActionButton(session, "hide_window", disabled = FALSE)
         updateActionButton(session, "sticky", disabled = FALSE)
+        updateSelectInput(session, "var_select", choices = names(filtered_data()))
       }
     })
     
@@ -292,8 +304,7 @@ viewerServer <- function(id, uploaded_files) {
       column_choice <- names(filtered_data()[5:ncol(filtered_data())])
       current_selected <- selected_vars()[[input$file_select]]
 
-      # pop_up(id = ns("pop_up"),current_selected = current_selected, column_choice = column_choice)
-      showModal(
+            showModal(
         modalDialog(
           title = "Column Visibility",
           div(
@@ -320,7 +331,8 @@ viewerServer <- function(id, uploaded_files) {
           size = "m"
         )
       )
-    })
+
+
 
     observeEvent(input$select_all,{
       column_choice <- names(filtered_data()[5:ncol(filtered_data())])
@@ -336,19 +348,6 @@ viewerServer <- function(id, uploaded_files) {
     }, ignoreInit = TRUE)
 
 
-    # Gestion de Check All / Uncheck all
-    # observeEvent(input$columns, {
-    # 
-    #   if (input$columns == "Check All") {
-    #     updateCheckboxGroupInput(session, "columns_vars",
-    #                              selected = names(filtered_data()))
-    #   } else {
-    #     updateCheckboxGroupInput(session, "columns_vars",
-    #                              selected = character(0))
-    #   }
-    # })
-
-
     # Update selected columns
     observeEvent(input$columns_vars, {
       req(input$file_select)
@@ -356,13 +355,9 @@ viewerServer <- function(id, uploaded_files) {
       current_selections[[input$file_select]] <- input$columns_vars
       selected_vars(current_selections)
     })
-
-    # selected_cols <- mod_column_selector_server(
-    #   "column_select",
-    #   filtered_data = filtered_data,
-    #   file_select = reactive(input$file_select)
-    # )
-
+    
+    })
+    
 
     
     # REACTABLE
@@ -381,6 +376,8 @@ viewerServer <- function(id, uploaded_files) {
           column_labels
         }
         
+        col_sticky <- selected_vars_s()[[input$file_select]]
+        
         colDefs <- lapply(names(data), function(name) {
           
           if (is.numeric(data[[name]])) {
@@ -390,6 +387,8 @@ viewerServer <- function(id, uploaded_files) {
                 filterable = TRUE,
                 filterMethod = JS("filterRange"),
                 filterInput = JS("muiRangeFilter"),
+                sticky = if(name %in% col_sticky) "left",
+                # cell = format_na(data[[name]]),
                 style = list(
                   whiteSpace = "nowrap",
                   overflow = "hidden",
@@ -397,12 +396,13 @@ viewerServer <- function(id, uploaded_files) {
                 )
               )
             }
-            
             }else {
               
               colDef(
-                header = if (input$show_label) label_list[[name]] else name,
+                header =  if (input$show_label) label_list[[name]] else name,
+                sticky = if(name %in% "USUBJID" | name %in% col_sticky) "left",
                 filterable = TRUE,
+                # cell = format_na(data[[name]]),
                 style = list(
                   whiteSpace = "nowrap",
                   overflow = "hidden",
@@ -418,7 +418,7 @@ viewerServer <- function(id, uploaded_files) {
       
       selected_cols <- selected_vars()[[input$file_select]]
 
-      reactable(filtered_data()[,c("USUBJID",  selected_cols)],
+      reactable( if("USUBJID" %in% names(filtered_data())) filtered_data()[,c("USUBJID",  selected_cols)] else filtered_data()[,selected_cols],
                 filterable = TRUE,
                 sortable = TRUE,
                 pagination = if (nrow(filtered_data()) > 20) TRUE else FALSE,
@@ -435,7 +435,7 @@ viewerServer <- function(id, uploaded_files) {
                   highlightColor = "#f0f5f9",
                   cellPadding = "8px 12px"
                 ),
-                defaultPageSize = 20
+                defaultPageSize = 30
       )
     })
     
@@ -446,7 +446,6 @@ viewerServer <- function(id, uploaded_files) {
       column_choice_s <- names(filtered_data()[5:ncol(filtered_data())])
       current_selected_s <- selected_vars_s()[[input$file_select]]
       
-      # pop_up(id = ns("pop_up"),current_selected = current_selected, column_choice = column_choice)
       showModal(
         modalDialog(
           title = "Column Visibility",
@@ -497,6 +496,154 @@ viewerServer <- function(id, uploaded_files) {
       current_selections_s <- selected_vars_s()
       current_selections_s[[input$file_select]] <- input$columns_vars_s
       selected_vars_s(current_selections_s)
+    })
+    
+    # UI Function
+    output$var <- renderUI({
+      req(filtered_data())
+      req(input$file_select)
+      
+      # Verify var_select is valid
+      if (is.null(input$var_select) || !input$var_select %in% names(filtered_data())) {
+        return(NULL)
+      }
+      
+      var <- filtered_data()[[input$var_select]]
+      
+      #Cat variables available
+      cat_vars <- names(filtered_data())[sapply(filtered_data(), function(x) !is.numeric(x))]
+      cat_vars <- setdiff(cat_vars, input$var_select)
+      
+      if (is.numeric(var)) {
+        
+        # Create unique ID
+        plot_id <- paste0("plot_", input$file_select)
+        
+        output[[plot_id]] <- renderPlotly({
+          if (input$check_group_l && !is.null(input$var_group_l) && 
+              input$var_group_l %in% names(filtered_data())) {
+            group <- filtered_data()[[input$var_group_l]]
+            
+            fig <- plot_ly(x = ~var, 
+                           color = ~group, 
+                           type = "box") %>%
+              layout(
+                title = list(
+                  text = paste("Distribution of", input$var_select, 
+                               "by", input$var_group_l),
+                  font = list(size = 16)
+                ),
+                xaxis = list(
+                  title = input$var_select,
+                  tickfont = list(size = 12),
+                  titlefont = list(size = 14)
+                ),
+                yaxis = list(
+                  title = "Count",
+                  tickfont = list(size = 12),
+                  titlefont = list(size = 14)
+                ),
+                showlegend = TRUE,
+                legend = list(
+                  title = list(
+                    text = input$var_group_l,
+                    font = list(size = 12)
+                  ),
+                  font = list(size = 11)
+                ),
+                margin = list(t = 50)
+              ) %>%
+              config(displayModeBar = FALSE)
+            
+          } else {
+            fig <- plot_ly(x = ~var, 
+                           type = "box",
+                           marker = list(color = '#3366CC')) %>%
+              layout(
+                title = list(
+                  text = paste("Distribution of", input$var_select),
+                  font = list(size = 16)
+                ),
+                xaxis = list(
+                  title = input$var_select,
+                  tickfont = list(size = 12),
+                  titlefont = list(size = 14)
+                ),
+                yaxis = list(
+                  title = "Count",
+                  tickfont = list(size = 12),
+                  titlefont = list(size = 14)
+                ),
+                showlegend = FALSE,
+                margin = list(t = 50)
+              ) %>%
+              config(displayModeBar = FALSE)
+          }
+          
+          return(fig)
+        })
+        
+
+        
+        # UI 
+        tagList(
+          layout_columns(
+            col_widths = c(6, 6),
+            checkboxInput(ns("check_group_l"), "Add grouping variable", value = FALSE),
+            conditionalPanel(
+              condition = "input.check_group_l == true",
+              ns = NS(id),
+              selectInput(ns("var_group_l"),
+                          "Select grouping variable",
+                          choices = cat_vars,
+                          selected = NULL)
+            )
+          ),
+          plotlyOutput(ns(plot_id))
+        )
+        
+      } else {
+        # Create unique ID
+        table_id <- paste0("freq_table_", input$file_select)
+        
+        # Create frequency table
+        output[[table_id]] <- renderReactable({
+          
+          if (input$check_group && !is.null(input$var_group) && 
+              input$var_group %in% names(filtered_data())) {
+            # Cross tab
+            cross_tab <- table(filtered_data()[[input$var_select]], 
+                               filtered_data()[[input$var_group]])
+            tab_df <- as.data.frame.matrix(cross_tab)
+          } else {
+            # Simple tab
+            tab_df <- as.data.frame(table(var))
+            names(tab_df) <- c("Category", "Count")
+          }
+          
+          reactable(tab_df, 
+                    defaultPageSize = 10,
+                    striped = TRUE,
+                    highlight = TRUE)
+        })
+        
+        # UI 
+        tagList(
+          layout_columns(
+            col_widths = c(6, 6),
+          checkboxInput(ns("check_group"), "Add grouping variable", value = FALSE),
+          conditionalPanel(
+            condition = "input.check_group == true",
+            ns = NS(id),
+            selectInput(ns("var_group"),
+                        "Select grouping variable",
+                        choices = cat_vars,
+                        selected = NULL)
+            )
+          ),
+          reactableOutput(ns(table_id))
+        )
+      }
     })
     
     
