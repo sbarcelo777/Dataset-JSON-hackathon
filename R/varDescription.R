@@ -4,10 +4,9 @@ varDescriptionUI <- function(id) {
   card(
     full_screen = TRUE,
     height = 650,
-    card_header("Variables description"),
-    selectInput(
+    pickerInput(
       ns("var_select"), 
-      "Select a variable",
+      label = NULL,
       choices = NULL,
       width = "100%"
     ),
@@ -27,7 +26,7 @@ varDescriptionServer <- function(id, filtered_data, selected_file) {
     # Update variable choices
     observe({
       req(filtered_data())
-      updateSelectInput(session, "var_select",
+      updatePickerInput(session, "var_select",
                         choices = c("Select a variable" = "", names(filtered_data())))
     })
     
@@ -140,7 +139,7 @@ varDescriptionServer <- function(id, filtered_data, selected_file) {
             conditionalPanel(
               condition = "input.check_group_l == true",
               ns = session$ns,
-              selectInput(session$ns("var_group_l"),
+              pickerInput(session$ns("var_group_l"),
                           "Select grouping variable",
                           choices = cat_vars,
                           selected = NULL)
@@ -204,7 +203,7 @@ varDescriptionServer <- function(id, filtered_data, selected_file) {
             conditionalPanel(
               condition = "input.check_group == true",
               ns = session$ns,
-              selectInput(session$ns("var_group"),
+              pickerInput(session$ns("var_group"),
                           "Select grouping variable",
                           choices = cat_vars,
                           selected = NULL)

@@ -61,18 +61,18 @@ const muiRangeFilter = (column, state) => {
           onChange: (e, val) => column.setFilter(val),
           'aria-label': `Filter ${column.name}`,
           sx: {
-            color: '#2c3e50',
+            color: '#2C3E50',
             '& .MuiSlider-thumb': {
               height: 20,
               width: 20,
               backgroundColor: '#fff',
-              border: '2px solid #2c3e50',
+              border: '2px solid #2C3E50',
               '&:focus, &:hover, &.Mui-active': {
                 boxShadow: '0 0 0 8px rgba(25, 118, 210, 0.25)',
               },
             },
             '& .MuiSlider-valueLabel': {
-              backgroundColor: '#2c3e50',
+              backgroundColor: '#2C3E50',
               borderRadius: '6px',
               padding: '4px 8px',
               fontSize: '0.75rem',
@@ -101,4 +101,12 @@ const filterRange = (rows, columnId, filterValue) => {
 ")
 
 
-
+auto_text_color <- function(background_color) {
+  rgb_color <- col2rgb(background_color)
+  luminance <- (0.299 * rgb_color[1] + 0.587 * rgb_color[2] + 0.114 * rgb_color[3]) / 255
+  if (luminance > 0.5) {
+    return("#000000")  # Black text for light backgrounds
+  } else {
+    return("#ffffff")  # White text for dark backgrounds
+  }
+}
