@@ -32,11 +32,11 @@ A powerful and user-friendly Shiny application for exploring and analyzing JSON 
 
 ### Prerequisites
 
-[Installation requirements will go here]
+This tool was built using R Version 4.4.1. Please try to use R version > 4. 
 
 ### Installation
 
-[Installation steps will go here]
+First, download our repository. then run `setup.R`. This should install required packages and then  run the app. If the app is not running please try to run `app.R` script.
 
 ## 📖 User Guide
 
@@ -104,6 +104,7 @@ For successful filtering operations:
 -   Case-sensitive filtering system
 -   Performance depends on environment capabilities
 -   Row highlighting functionality still under development, please be sure to not hide the column selected for highlighting
+-   Support NDJSON files coming soon
 
 ## 👥 Authors
 

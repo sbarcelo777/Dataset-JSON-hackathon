@@ -6,6 +6,11 @@ library(DT)
 library(dplyr)
 library(reactable)
 library(plotly)
+library(purrr)
+library(reactR)
+library(htmltools)
+library(bsicons)
+
 
 # Source all .R files in the R/ directory
 file_paths <- list.files("R", pattern = "\\.R$", full.names = TRUE)

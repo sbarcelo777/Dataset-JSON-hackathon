@@ -1,2 +1,4 @@
 json_cache.db
 .Rproj.user
+.RData
+.Rhistory
