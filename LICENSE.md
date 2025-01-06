@@ -1,10 +1,5 @@
----
-editor_options: 
-  markdown: 
-    wrap: 72
----
 
-## GPL License
+# GPL License
 
 ------------------------------------------------------------------------
 <div style="text-align: center;">
