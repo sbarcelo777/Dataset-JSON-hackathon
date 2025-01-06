@@ -1,7 +1,7 @@
-<img src="images/json.svg" height="300" style="float:right; margin-left:10px;">
+<img src="www/json.svg" height="300" style="float:right; margin-left:10px;">
 
 
-# JSON Dataset Viewer   
+# JSON Dataset Viewer    
 
 A powerful and user-friendly Shiny application for exploring and analyzing JSON datasets with interactive features and comprehensive data visualization capabilities.
 

@@ -115,9 +115,12 @@ uploadServer <- function(id) {
     }
     # Display selected JSON content
     output$json_content <- renderPrint({
-      req(input$selected_file)
-      
       files <- uploaded_files()
+      if (length(files) == 0) {
+        return(cat("Metadata will be shown there."))
+      }
+      
+      req(input$selected_file)
       
       # Get the selected file's content
       selected_content <- files[[input$selected_file]]
@@ -126,7 +129,7 @@ uploadServer <- function(id) {
       modified_content <- remove_specific_elements(selected_content)
       
       # Pretty print the modified structure
-      str(modified_content)
+      return(str(modified_content))
     })
     
     

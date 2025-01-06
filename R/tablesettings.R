@@ -151,11 +151,6 @@ settingsServer <- function(id, filtered_data, selected_file) {
     
     data_ready <- reactiveVal(FALSE)
     
-    observeEvent(input$color_picker, {
-      # This will print the selected color value (hex code)
-      print(input$color_picker)
-    })
-    
     debounced_data <- reactive({
       req(filtered_data())
       filtered_data()

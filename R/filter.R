@@ -155,8 +155,7 @@ filterServer <- function(id, uploaded_files) {
         })
       }
       
-      print(invalid_filters)
-      
+
       if(length(invalid_filters) > 0) {
         # print(invalid_filters)
         # print("TRUE")
