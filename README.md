@@ -77,7 +77,7 @@ For successful filtering operations:
 |-----------|----------------------------|
 | Equality  | `VAR == "Value"`           |
 | AND       | `condition1 && condition2` |
-| OR        | `condition1` `| |` `condition2` |
+| OR        | `condition1 II condition2` |
 | NOT       | `!condition`               |
 | Numeric   | `VARNUM < 78`              |
 
