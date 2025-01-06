@@ -1,9 +1,3 @@
-# Source all .R files in the R/ directory
-# file_paths <-
-#   list.files("module_approach", pattern = "\\.R$", full.names = TRUE)
-# 
-# lapply(file_paths, source)
-
 viewerUI <- function(id) {
   ns <- NS(id)
   page_fluid(
