@@ -1,5 +1,5 @@
 
-# GPL License
+# GPL-3 License
 
 ------------------------------------------------------------------------
 <div style="text-align: center;">
