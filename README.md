@@ -42,22 +42,20 @@ A powerful and user-friendly Shiny application for exploring and analyzing JSON 
 
 ### File Upload Process
 
-1.  Select JSON/NDJSON files through the browser
+1.  Select JSON files through the browser
 2.  Wait for complete upload (files appear in list)
 3.  View metadata in the right panel
 4.  Access the Viewer Panel once data is loaded
 
 The JSON Dataset Viewer allows you to select json and ndjson files from a browser. You should be able to only select those supported extensions to avoid errors. Once the selected files are uploaded you are able to see the list of them in the card below, as well as the metadata behind it on the right side. You should only see the Viewer Panel appear when the data is fully loaded. Click on "Remove All Files" button to clear the list, this is basically reloading the session. It is not possible yet to delete one specific dataset from the list. Navigate across the radio buttons to see metadata from the different json files.
 
-![JSON Dataset Viewer Screenshot](images/test.png)
-
 > ⚠️ **Important:** Be patient with large files and ensure complete upload before switching panels.
 
 ### Data Viewer Features
 
-#### Viewer Tool
+#### Viewer Left Box
 
-The Viewer Tool consists of three main panels:
+The Viewer Left Box consists of three main panels:
 
 1.  **Data Manipulation Panel**
     -   File selection
@@ -79,25 +77,33 @@ For successful filtering operations:
 |-----------|----------------------------|
 | Equality  | `VAR == "Value"`           |
 | AND       | `condition1 && condition2` |
-| OR        | `condition1 || condition2` |
+| OR        | `condition1` `||` `condition2` |
 | NOT       | `!condition`               |
 | Numeric   | `VARNUM < 78`              |
 
 > 🔍 Remember to match variable names exactly and use double quotes for text values!
 
-### Variable Browser Features
+### Viewer Features
 
-The Variable Browser automatically adapts to your data:
-
--   **Categorical Variables:** Distribution tables
--   **Numeric Variables:** Statistical visualizations
--   **Grouping Options:** Multi-variable analysis
+1.  **Dynamic filtering**
+    -   Use a slider to filter numeric variables dynamically.
+    -   Search for specific categorical values by typing into the search input located at the top of the corresponding column.
+    -   These features leverage JavaScript to improve dataset navigation. Once you're satisfied with your filters, type in the Viewer Left Box to enable downloading the filtered data.
+2.  **Column management**
+    -   Click/unclick to show labels
+    -   Select column to show or to stick
+    -   Download R filtered data
+3.  **Row highlighting functionality**
+    -   Chose a column
+    -   Select values (slider for numeric)
+    -   Select a color
 
 ## Known Limitations
 
 -   Bulk file removal only (individual file deletion coming soon)
 -   Case-sensitive filtering system
 -   Performance depends on environment capabilities
+-   Row highlighting functionality still under development, please be sure to not hide the column selected for highlighting
 
 ## 👥 Authors
 
@@ -106,7 +112,7 @@ The Variable Browser automatically adapts to your data:
 
 ## 📄 License
 
-[License information will go here]
+GPL License
 
 ------------------------------------------------------------------------
 
