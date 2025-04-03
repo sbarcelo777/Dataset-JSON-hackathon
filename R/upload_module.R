@@ -7,39 +7,51 @@ uploadUI <- function(id) {
       card(
         max_height = "600px",
         card_header("File Management"),
+        
         div(
-          style = "display: flex; gap: 10px; align-items: flex-start;",
+          style = "display: flex; flex-direction: column; gap: 10px;",
+          
+          # Dropdown to select file format
+          selectInput(ns("file_format"), "Select File Format", 
+                      choices = c("JSON" = "json", "NDJSON" = "ndjson"),
+                      selected = "json"),
+          
           div(
-            style = "flex-grow: 1;",
-            fileInput(ns("json_files"), 
-                      "Choose JSON File(s)", 
-                      multiple = TRUE,
-                      accept = c(".json", ".ndjson"))
-          ),
-          div(
-            style = "margin-top: 25px;",
-            actionButton(ns("remove_files"), 
-                         "Remove All Files", 
-                         class = "btn-primary")
+            style = "display: flex; gap: 10px; align-items: flex-start;",
+            
+            div(
+              style = "flex-grow: 1;",
+              uiOutput(ns("file_input_ui"))  # Dynamic fileInput
+            ),
+            
+            div(
+              style = "margin-top: 25px;",
+              actionButton(ns("remove_files"), 
+                           "Remove All Files", 
+                           class = "btn-primary")
+            )
           )
         ),
+        
         uiOutput(ns("file_selection"))
-      ),
+      )
+      ,
       card(
         card_header("JSON Content Details"),
         verbatimTextOutput(ns("json_content"))
       )
-    ),
-    
+    )
+    ,
+
     layout_columns(
-      col_widths = c(2, 10), 
+      col_widths = c(2, 10),
       page_fluid(
         uiOutput(ns("boxes"))
       ),
-      card(
-        card_header("Visualization"),
-        plotlyOutput(ns("plot_metadata"))
-      )
+    card(
+      card_header("Visualization"),
+      plotlyOutput(ns("plot_metadata"))
+    )
     )
   )
 }
@@ -48,43 +60,25 @@ uploadUI <- function(id) {
 uploadServer <- function(id) {
   moduleServer(id, function(input, output, session) {
     
+    ns <- NS(id)
+    
     options(shiny.maxRequestSize=5*1024^3)
     
-    observeEvent(input$remove_files, {
-      session$reload()
-    })
-    
-    uploaded_files <- reactiveVal(list())
-    records <- reactiveVal(list())
-    labels <- reactiveVal(list())
-    
-    
-    observeEvent(input$json_files, {
-      req(input$json_files)
-      files <- input$json_files
-      files_list <- uploaded_files()
-
-      # Process each uploaded file
-      for(i in 1:nrow(input$json_files)) {
-        file_path <- input$json_files$datapath[i]
-        file_name <- input$json_files$name[i]
-
-        # Read JSON content
-        content <- tryCatch(
-          fromJSON(file_path, simplifyVector = F),
-          error = function(e) NULL
-        )
-
-        if(!is.null(content)) {
-          files_list[[file_name]] <- content
-        }
-      }
+    observe({
+      file_ext <- input$file_format
+      accept_types <- if (file_ext == "json") ".json" else ".ndjson"
       
-      uploaded_files(files_list)
+      output$file_input_ui <- renderUI({
+        fileInput(ns("json_files"), 
+                  "Choose File(s)", 
+                  multiple = TRUE, 
+                  accept = accept_types)
+      })
     })
     
-    
-    
+    file_format <- reactive({
+      input$file_format
+    })
     
     # Generate radio buttons for file selection
     output$file_selection <- renderUI({
@@ -99,33 +93,94 @@ uploadServer <- function(id) {
     })
     
     
+    observeEvent(input$remove_files, {
+      # session$reload()
+      uploaded_files(NULL)
+      logger::log_info("ALL FILES REMOVED")
+    })
+    
+    observeEvent(input$file_format, {
+      # session$reload()
+      uploaded_files(NULL)
+      logger::log_info(paste0("Change file format to "), input$file_format)
+      
+    })
+    
+    uploaded_files <- reactiveVal(list())
+    records <- reactiveVal(list())
+    labels <- reactiveVal(list())
+    
+
+    observeEvent(input$json_files, {
+      req(input$json_files)
+      files <- input$json_files
+      files_list <- uploaded_files()
+
+      # Process each uploaded file
+      for(i in 1:nrow(input$json_files)) {
+        file_path <- input$json_files$datapath[i]
+        file_name <- input$json_files$name[i]
+        if (input$file_format == "json"){
+          logger::log_info(paste0("Uploaded file : "), file_name)
+          # Read JSON content
+          content <- tryCatch(
+            fromJSON(file_path, simplifyVector = F),
+            error = function(e) NULL
+          )
+    
+        }else if (input$file_format == "ndjson"){
+          
+          logger::log_info(paste0("Uploaded file : "), file_name)
+          # Read JSON content
+          lines <- readLines(file_path, encoding = "UTF-8")
+          # Extract metadata (first line is a JSON object)
+          metadata <- fromJSON(lines[1])
+          content <- metadata
+          
+        }
+        
+
+        if(!is.null(content)) {
+          content$datapath <- file_path
+          files_list[[file_name]] <- content
+        }
+      }
+      # files_list[[file_path]] <- file_path
+      
+      uploaded_files(files_list)
+    })
+    
+    
+    
+    
+    
+    
     
     # Function to remove specific elements from a list
     remove_specific_elements <- function(x) {
-      if (is.list(x)) {
-        # Remove specific elements if they exist
-        x$elements <- NULL
-        x$column <- NULL
-        x$columns <- NULL  # including 'columns' in case it's plural
-        x$row <- NULL
-        x$rows <- NULL    # including 'rows' in case it's plural
-        return(x)
-      }
+      
+          if (is.list(x)) {
+          # Remove specific elements if they exist
+          x$elements <- NULL
+          x$column <- NULL
+          x$columns <- NULL  # including 'columns' in case it's plural
+          x$row <- NULL
+          x$rows <- NULL    # including 'rows' in case it's plural
+          }
+        
       return(x)
     }
+    
     # Display selected JSON content
     output$json_content <- renderPrint({
+      req(input$selected_file)
       files <- uploaded_files()
       if (length(files) == 0) {
         return(cat("Metadata will be shown there."))
       }
       
-      req(input$selected_file)
-      
       # Get the selected file's content
       selected_content <- files[[input$selected_file]]
-
-      # Remove specific elements from the content
       modified_content <- remove_specific_elements(selected_content)
       
       # Pretty print the modified structure
@@ -135,13 +190,12 @@ uploadServer <- function(id) {
     
     output$boxes <- renderUI({
       req(input$json_files)
-      
+
       files <- uploaded_files()
-      
       records <- t(sapply(uploaded_files(), function(x) c(records = x$records)))
       total_records <- format(sum(as.numeric(records)), big.mark = ".", decimal.mark = ",")
-      
-      
+
+
       vbs <- list(
         value_box(
           title = "Navigate accross",
@@ -157,44 +211,33 @@ uploadServer <- function(id) {
           theme = value_box_theme(bg = "#18BC9C", fg = "#fff"),
           p("in an efficient way"),
         )
-        # ,
-        # value_box(
-        #   # title = "Welcome to our ",
-        #   value = shiny::img(src = "json.svg", width = "180px", height = "180px"),
-        #   # showcase = shiny::img(src = "json.svg", width = "180px", height = "180px"),
-        #   theme = value_box_theme(bg = "#2C3E50", fg = "#fff"),
-        #   p("Feel free to share your feedback with us."),
-        #   p("Sebastià Barceló"),
-        #   p("Hugo Signol"),
-        #   p("v0.1")
-        # )
       )
-      
+
       layout_column_wrap(
         # width = "",
         !!!vbs
       )
-      
-      
+
+
     })
     
     output$plot_metadata <- renderPlotly({
       req(input$json_files)
       req(input$selected_file)
-      
-      
+
+
       records <- t(sapply(uploaded_files(), function(x) c(records = x$records)))
       labels <- t(sapply(uploaded_files(), function(x) c(labels = x$label)))
-      
+
       files <- uploaded_files()
       selected_content <- files[[input$selected_file]]
-      
-            
+
+
       df <- as.data.frame(records)
       names(df) <- as.factor(labels)
-      
-      
-      df <- tidyr::pivot_longer(df, 
+
+
+      df <- tidyr::pivot_longer(df,
                           cols = everything(),
                           names_to = "Category",
                           values_to = "Count")
@@ -211,7 +254,7 @@ uploadServer <- function(id) {
           xaxis = list(title = "Count"),
           yaxis = list(title = "")
         )
-    
+
 
     p %>%
       layout(
@@ -222,10 +265,13 @@ uploadServer <- function(id) {
         )
       ) %>%
       config(displayModeBar = FALSE)
-      
+
     })
     
 
-    return(uploaded_files)
+    return(list(
+      uploaded_files = uploaded_files,
+      file_format = file_format
+    ))
   })
 }

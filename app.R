@@ -44,11 +44,12 @@ ui <- page_navbar(
 server <- function(input, output, session) {
   # bs_themer()
 
-  uploaded_files <- uploadServer("upload")
+  upload_data <- uploadServer("upload")
+
   
   observe({
     # Check if files are uploaded
-    has_files <- !is.null(uploaded_files()) && length(uploaded_files()) > 0
+    has_files <- !is.null(upload_data$uploaded_files()) && length(upload_data$uploaded_files()) > 0
     
     # Hide/show viewer tabs based on file upload status
     if (!has_files) {
@@ -58,10 +59,12 @@ server <- function(input, output, session) {
     }
   })
   
-  viewerServer("viewer", uploaded_files)
+  viewerServer("viewer", upload_data)
   
-  observeEvent(uploaded_files(), {
-    if (is.null(uploaded_files()) || length(uploaded_files()) == 0) {
+  
+  # observeEvent(uploaded_files(), {
+  observe({
+    if (is.null(upload_data$uploaded_files()) || length(upload_data$uploaded_files()) == 0) {
       updateNavbarPage(session, "mainTabs", selected = "Home")
     }
   })

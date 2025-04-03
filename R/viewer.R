@@ -69,26 +69,29 @@ Taking a moment to review your filters before running them can save you time and
 
 
 # 4. Viewer Server 2
-viewerServer <- function(id, uploaded_files) {
+viewerServer <- function(id, upload_data) {
   moduleServer(id, function(input, output, session) {
-    # Initialize filter module
-    filter_results <- filterServer("filter", uploaded_files)
-  
-    # Initialize variable description module
-    varDescriptionServer("var_desc",
-                         filter_results$filtered_data,
-                         filter_results$selected_file)
-    
-    settingsServer("settings",
-                   filter_results$filtered_data,
-                   filter_results$selected_file)
-    
+
+       # Initialize filter module
+      filter_results <- filterServer("filter", upload_data$uploaded_files, upload_data$file_format)
+
+      # Initialize variable description module
+      varDescriptionServer("var_desc",
+                           filter_results$filtered_data,
+                           filter_results$selected_file)
+
+      settingsServer("settings",
+                     filter_results$filtered_data,
+                     filter_results$selected_file)
+
+
+
     # Return values that might be needed by parent module
     return(
       list(
         filtered_data = filter_results$filtered_data,
         selected_file = filter_results$selected_file
-       
+
       )
     )
   })

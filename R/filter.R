@@ -9,20 +9,20 @@ filterUI <- function(id) {
     height = 350,
     # card_header("Filter Options"),
     pickerInput(
-      ns("file_select"), 
+      ns("file_select"),
       "Select a dataset",
       choices = NULL,
       width = "100%",
-      options = pickerOptions(container = "body", 
+      options = pickerOptions(container = "body",
                               liveSearch = TRUE,
                               size = 15)
       ),
     searchInput(
-      inputId = ns("r_filter"), 
-      label = "Filter data using R expressions", 
-      placeholder = "e.g., AGE > 30 & STATUS == 'Active'", 
-      btnSearch = icon("search"), 
-      btnReset = icon("remove"), 
+      inputId = ns("r_filter"),
+      label = "Filter data using R expressions",
+      placeholder = "e.g., AGE > 30 & STATUS == 'Active'",
+      btnSearch = icon("search"),
+      btnReset = icon("remove"),
       width = "100%"
     ),
     uiOutput(ns("nbobs")),
@@ -30,27 +30,39 @@ filterUI <- function(id) {
   )
 }
 
-filterServer <- function(id, uploaded_files) {
+filterServer <- function(id, uploaded_files, file_format) {
   moduleServer(id, function(input, output, session) {
     r_filters <- reactiveVal(list())
     filtered_data <- reactiveVal(NULL)
 
+
     # Get current dataset function
     get_current_dataset <- reactive({
-      req(input$file_select)
-      
-      selected_name_label <- strsplit(input$file_select, "-->")[[1]]
-      selected_name <- selected_name_label[1]
-      selected_label <- selected_name_label[2]
-      
-      json_data <- uploaded_files() %>%
-        purrr::keep(~ .x$name == selected_name && .x$label == selected_label) %>%
-        purrr::pluck(1)
-      
-      render_df <- as.data.frame(process_json_file(json_data = json_data))
-      return(render_df)
+      tryCatch({
+        req(input$file_select)
+        
+        selected_name_label <- strsplit(input$file_select, "-->")[[1]]
+        selected_name <- selected_name_label[1]
+        selected_label <- selected_name_label[2]
+        
+        json_data <- uploaded_files() %>%
+          purrr::keep(~ .x$name == selected_name && .x$label == selected_label) %>%
+          purrr::pluck(1)
+        
+        if (file_format() == "json") {
+          render_df <- as.data.frame(process_json_file(json_data = json_data))
+        } else {
+          render_df <- as.data.frame(process_ndjson_file(json_data = json_data))
+        }
+        
+        
+        return(render_df)
+      }, error = function(e) {
+        # Handle error by returning NULL
+        return(NULL)
+      })
     })
-    
+
     # File selection observer
     observe({
       if (is.null(uploaded_files()) || length(uploaded_files()) == 0) {
@@ -59,13 +71,13 @@ filterServer <- function(id, uploaded_files) {
         names <- t(sapply(uploaded_files(), function(x) c(name = x$name)))
         labels <- t(sapply(uploaded_files(), function(x) c(label = x$label)))
         choices <- setNames(paste0(names, "-->", labels), paste0(names, " - ", labels))
-        updatePickerInput(session, "file_select", 
-                          choices = choices, 
+        updatePickerInput(session, "file_select",
+                          choices = choices,
                           selected = choices[1])
       }
-     
+
     })
-    
+
     observeEvent(input$r_filter_search, {
       req(input$r_filter)
       if (nchar(glue::trim(input$r_filter)) > 0) {
@@ -76,25 +88,25 @@ filterServer <- function(id, uploaded_files) {
         updateSearchInput(session, "r_filter", value = "")
       }
     })
-    
-    
+
+
     output$nbobs <- renderUI({
-      
+
       tagList(
         tags$em(
           paste0("You currently have ", nrow(filtered_data()) ," out of ", nrow(get_current_dataset()), " observations")
         )
       )
     })
-    
+
     # Render active filters
     output$active_filters <- renderUI({
       current_filters <- r_filters()
       if (length(current_filters) == 0) {
         return(NULL)
       }
-      
-      
+
+
       page_fluid(
         class = "mt-3",
         lapply(names(current_filters), function(filter_id) {
@@ -112,7 +124,7 @@ filterServer <- function(id, uploaded_files) {
         })
       )
     })
-    
+
     # Handle filter removal
     observe({
       current_filters <- r_filters()
@@ -127,34 +139,34 @@ filterServer <- function(id, uploaded_files) {
         })
       }
     })
-    
+
     # Apply filters and update filtered data
     filtered_result <- reactive({
       req(get_current_dataset())
       result <- get_current_dataset()
-      
+
       current_filters <- r_filters()
       invalid_filters <- c()
-      
+
       for(filter_id in names(current_filters)) {
         filter_expr <- current_filters[[filter_id]]
-        
+
         tryCatch({
           temp_result <- result %>%
             filter(eval(parse(text = filter_expr)))
           result <- temp_result
         }, error = function(e) {
           invalid_filters <- filter_id
-          
+
           showNotification(
             paste("Error in filter expression:", e$message),
             type = "error"
           )
 
-          
+
         })
       }
-      
+
 
       if(length(invalid_filters) > 0) {
         # print(invalid_filters)
@@ -163,32 +175,27 @@ filterServer <- function(id, uploaded_files) {
         current_filters <- setdiff(current_filters, invalid_filters)
         r_filters(current_filters)
       }
-      
+
       result
     })
-    
+
     # Reset filters when dataset changes
     observeEvent(input$file_select, {
       r_filters(list())
       filtered_data(get_current_dataset())
     })
-    
+
     # Update filtered data
     observe({
       filtered_data(filtered_result())
     })
-    
-    labels <- reactive({
-      req(uploaded_files())
-      labels <- t(sapply(uploaded_files(), function(x) c(label = x$label)))
-      return(labels)
-    })
+
   
+
     return(list(
       filtered_data = filtered_data,
       r_filters = r_filters,
       selected_file = reactive(input$file_select),
-      labels = labels,
       nrows = reactive(nrow(get_current_dataset()))
     ))
   })
