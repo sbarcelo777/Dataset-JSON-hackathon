@@ -46,15 +46,25 @@ filterServer <- function(id, uploaded_files, file_format) {
         selected_label <- selected_name_label[2]
         
         json_data <- uploaded_files() %>%
-          purrr::keep(~ .x$name == selected_name && .x$label == selected_label) %>%
+          purrr::keep(~ .x$name == selected_name 
+                      # && .x$label == selected_label
+                      ) %>%
           purrr::pluck(1)
         
         if (file_format() == "json") {
           render_df <- as.data.frame(process_json_file(json_data = json_data))
-        } else {
+        } else if(file_format() == "ndjson") {
           render_df <- as.data.frame(process_ndjson_file(json_data = json_data))
+        } else if(file_format() == "xpt") {
+          render_df <- json_data$content
+          labels <- labelled::var_label(render_df)
+          setattr(render_df, "labels", setNames(labels, names(render_df)))
+        }else if(file_format() == "sas7bdat") {
+          render_df <- as.data.frame(json_data$content)
+          labels <- labelled::var_label(render_df)
+          setattr(render_df, "labels", setNames(labels, names(render_df)))
+          
         }
-        
         
         return(render_df)
       }, error = function(e) {
@@ -69,7 +79,9 @@ filterServer <- function(id, uploaded_files, file_format) {
         choices <- NULL
       } else {
         names <- t(sapply(uploaded_files(), function(x) c(name = x$name)))
-        labels <- t(sapply(uploaded_files(), function(x) c(label = x$label)))
+        labels <- t(sapply(uploaded_files(), function(x) 
+          c(label = ifelse(is.null(x$label), " ", x$label))
+        ))        
         choices <- setNames(paste0(names, "-->", labels), paste0(names, " - ", labels))
         updatePickerInput(session, "file_select",
                           choices = choices,

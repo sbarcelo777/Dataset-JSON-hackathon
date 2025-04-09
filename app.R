@@ -10,6 +10,8 @@ library(purrr)
 library(reactR)
 library(htmltools)
 library(bsicons)
+library(logger)
+library(haven)
 
 
 # Source all .R files in the R/ directory
@@ -28,7 +30,7 @@ ui <- page_navbar(
   id = "mainTabs",
   nav_panel(
     title = "Home",
-    uploadUI("upload")
+      uploadUI("upload"),
   ),
   nav_panel(
     title = "Viewer",
