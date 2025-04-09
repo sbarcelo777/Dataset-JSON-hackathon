@@ -16,6 +16,11 @@ process_json_file <- function(json_data,
   library(DBI)
   library(RSQLite)
   
+  json_data <- tryCatch(
+    fromJSON(json_data$path, simplifyVector = F),
+    error = function(e) NULL
+  )
+  
   tryCatch({
     # Input validation
     if (!is.list(json_data) || !all(c("columns", "rows") %in% names(json_data))) {

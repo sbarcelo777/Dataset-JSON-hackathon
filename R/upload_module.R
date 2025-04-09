@@ -1,57 +1,91 @@
 uploadUI <- function(id) {
   ns <- NS(id)
+  
+  # Add CSS for responsiveness
+  css <- tags$style(HTML("
+    /* Adjust spacing on smaller screens */
+    @media (max-width: 992px) {
+      .card-body { padding: 0.75rem; }
+      .form-group { margin-bottom: 0.5rem; }
+      .responsive-card { margin-bottom: 1rem; }
+    }
+    
+    /* Stack buttons vertically on very small screens */
+    @media (max-width: 576px) {
+      .btn-group-responsive { display: flex; flex-direction: column; }
+      .btn-group-responsive .btn { margin-bottom: 0.5rem; width: 100%; }
+    }
+    
+ 
+  "))
+  
   page_fluid(
-    layout_columns(
-      col_widths = c(4, 8),
-      
-      card(
-        max_height = "600px",
-        card_header("File Management"),
+    css,
+    layout_column_wrap(
+      width = "400px", # Columns will wrap when narrower than this
+      heights_equal = "row",
+      layout_columns(
+        col_widths = c(3, 9),
+        heights_equal = "row",
         
-        div(
-          style = "display: flex; flex-direction: column; gap: 10px;",
-          
-          # Dropdown to select file format
-          selectInput(ns("file_format"), "Select File Format", 
-                      choices = c("JSON" = "json", "NDJSON" = "ndjson"),
-                      selected = "json"),
-          
-          div(
-            style = "display: flex; gap: 10px; align-items: flex-start;",
-            
+        # File Management Card
+        card(
+          class = "responsive-card",
+          full_screen = FALSE,
+          card_header(
             div(
-              style = "flex-grow: 1;",
-              uiOutput(ns("file_input_ui"))  # Dynamic fileInput
-            ),
-            
-            div(
-              style = "margin-top: 25px;",
-              actionButton(ns("remove_files"), 
-                           "Remove All Files", 
-                           class = "btn-primary")
+              style = "display: flex; align-items: center;",
+              icon("file-alt"),
+              span(style = "margin-left: 10px; font-size: 18px;", "File Management")
             )
+          ),
+          selectInput(ns("file_format"), "File Format", 
+                      choices = c(
+                        "JSON" = "json", 
+                        "NDJSON" = "ndjson", 
+                        "SAS XPT" = "xpt", 
+                        "SAS7BDAT" = "sas7bdat"
+                      ),
+                      selected = "json"),
+          uiOutput(ns("file_input_ui")),  # Dynamic fileInput
+          div(
+            class = "d-grid gap-2", # Bootstrap grid for button
+            actionButton(ns("remove_files"), 
+                         "Clear All Files", 
+                         class = "btn-danger btn-sm",
+                         icon = icon("trash-alt"))
           )
         ),
         
-        uiOutput(ns("file_selection"))
+        # Available Files Card
+        card(
+          max_height = "600px",
+          full_screen = TRUE,
+          layout_sidebar(
+            fillable = FALSE,
+            sidebar = sidebar(
+              open = "always",
+              width = 250,
+              position = "left",
+              uiOutput(ns("file_selection"))
+            ),
+            uiOutput(ns("json_content")
+            )              
+          )
+        )
       )
-      ,
-      card(
-        card_header("JSON Content Details"),
-        verbatimTextOutput(ns("json_content"))
-      )
-    )
-    ,
-
-    layout_columns(
-      col_widths = c(2, 10),
-      page_fluid(
-        uiOutput(ns("boxes"))
-      ),
-    card(
-      card_header("Visualization"),
-      plotlyOutput(ns("plot_metadata"))
-    )
+      
+    ),
+    
+    # Second section - Boxes and Visualization
+    layout_column_wrap(
+      width = "250px",
+      heights_equal = "row",
+      
+      # Boxes Section - Directly using value boxes without a card
+      uiOutput(ns("boxes")),
+      uiOutput(ns("visualisation"), height = "300px")
+      
     )
   )
 }
@@ -61,12 +95,19 @@ uploadServer <- function(id) {
   moduleServer(id, function(input, output, session) {
     
     ns <- NS(id)
+    uploaded_files <- reactiveVal(list())
+    records <- reactiveVal(list())
+    labels <- reactiveVal(list())
+    actual_format <- reactiveVal()
     
     options(shiny.maxRequestSize=5*1024^3)
     
     observe({
       file_ext <- input$file_format
-      accept_types <- if (file_ext == "json") ".json" else ".ndjson"
+      accept_types <- case_when(file_ext == "json" ~ ".json",
+                                file_ext == "ndjson" ~ ".ndjson",
+                                file_ext == "xpt" ~ ".xpt",
+                                file_ext == "sas7bdat" ~ ".sas7bdat")
       
       output$file_input_ui <- renderUI({
         fileInput(ns("json_files"), 
@@ -79,6 +120,7 @@ uploadServer <- function(id) {
     file_format <- reactive({
       input$file_format
     })
+  
     
     # Generate radio buttons for file selection
     output$file_selection <- renderUI({
@@ -101,18 +143,14 @@ uploadServer <- function(id) {
     
     observeEvent(input$file_format, {
       # session$reload()
-      uploaded_files(NULL)
       logger::log_info(paste0("Change file format to "), input$file_format)
       
     })
-    
-    uploaded_files <- reactiveVal(list())
-    records <- reactiveVal(list())
-    labels <- reactiveVal(list())
-    
 
     observeEvent(input$json_files, {
       req(input$json_files)
+      
+      if(!is.null(actual_format()) && actual_format() != input$file_format) uploaded_files(NULL)
       files <- input$json_files
       files_list <- uploaded_files()
 
@@ -120,76 +158,123 @@ uploadServer <- function(id) {
       for(i in 1:nrow(input$json_files)) {
         file_path <- input$json_files$datapath[i]
         file_name <- input$json_files$name[i]
+        
         if (input$file_format == "json"){
           logger::log_info(paste0("Uploaded file : "), file_name)
+          
           # Read JSON content
           content <- tryCatch(
             fromJSON(file_path, simplifyVector = F),
             error = function(e) NULL
           )
-    
-        }else if (input$file_format == "ndjson"){
+          label <- content$label
+          name <- content$name
+          records <- content$records
           
+          files_list[[file_name]] <- list(
+            label = label,
+            name = name,
+            records = records,
+            path = file_path
+          )
+          
+
+        }else if (input$file_format == "ndjson"){
           logger::log_info(paste0("Uploaded file : "), file_name)
+          
           # Read JSON content
           lines <- readLines(file_path, encoding = "UTF-8")
-          # Extract metadata (first line is a JSON object)
-          metadata <- fromJSON(lines[1])
-          content <- metadata
+          content <- fromJSON(lines[1])
           
-        }
-        
+          files_list[[file_name]] <- list(
+            label = content$label,
+            name = content$name,
+            records = content$records,
+            path = file_path
+          )
 
-        if(!is.null(content)) {
-          content$datapath <- file_path
-          files_list[[file_name]] <- content
+        }else if (input$file_format == "xpt"){
+          logger::log_info(paste0("Uploaded file : "), file_name)
+          
+          content <- haven::read_xpt(file_path)
+          label <- attr(content, "label")
+          name <- toupper(sub("\\.XPT$", "", file_name, ignore.case = TRUE))
+
+          files_list[[file_name]] <- list(
+            label = label,
+            name = name,
+            path = file_path,
+            records = nrow(content),
+            content = content
+          )
+
+        }else if (input$file_format == "sas7bdat"){
+          logger::log_info(paste0("Uploaded file : "), file_name)
+          
+          content <- haven::read_sas(file_path, encoding = "UTF-8")
+          label <- attr(content, "label")
+          name <- toupper(sub("\\.SAS7BDAT$", "", file_name, ignore.case = TRUE))
+          
+          files_list[[file_name]] <- list(
+            label = label,
+            name = name,
+            path = file_path,
+            records = nrow(content),
+            content = content
+          )
         }
+
       }
-      # files_list[[file_path]] <- file_path
-      
+
       uploaded_files(files_list)
-    })
-    
-    
-    
-    
-    
-    
-    
-    # Function to remove specific elements from a list
-    remove_specific_elements <- function(x) {
+      actual_format(tolower(tools::file_ext(input$json_files$name[i])))
+      logger::log_info(paste0("Actual file format: ", actual_format()))
       
-          if (is.list(x)) {
-          # Remove specific elements if they exist
-          x$elements <- NULL
-          x$column <- NULL
-          x$columns <- NULL  # including 'columns' in case it's plural
-          x$row <- NULL
-          x$rows <- NULL    # including 'rows' in case it's plural
-          }
-        
-      return(x)
-    }
+    })
+  
     
+
+
     # Display selected JSON content
-    output$json_content <- renderPrint({
+    output$json_content <- renderUI({
       req(input$selected_file)
       files <- uploaded_files()
+      selected_file <- files[[input$selected_file]]
+      file_path <- selected_file$path
+
       if (length(files) == 0) {
         return(cat("Metadata will be shown there."))
       }
-      
-      # Get the selected file's content
-      selected_content <- files[[input$selected_file]]
-      modified_content <- remove_specific_elements(selected_content)
-      
-      # Pretty print the modified structure
-      return(str(modified_content))
+      if(!actual_format() %in% c("json", "ndjson")){
+        plotlyOutput(ns("plot_metadata"))
+      }else{
+        if (actual_format() == "json"){
+          # Read JSON content
+          content <- tryCatch(
+            fromJSON(file_path, simplifyVector = F),
+            error = function(e) NULL
+          )
+        }else if (actual_format() == "ndjson"){
+          # Read JSON content
+          lines <- readLines(file_path, encoding = "UTF-8")
+          content <- fromJSON(lines[1])
+        }
+
+        modified_content <- remove_specific_elements(content)
+        # Convert and transpose your data
+        df_transposed <- list_to_transposed_df(modified_content)
+
+        # Display as an interactive table
+       reactable(df_transposed, striped = TRUE, highlight = TRUE, bordered = TRUE, defaultPageSize = 20, style = list(fontSize = "11px"),columns = list(
+         Key = colDef(width = 150)  # Set desired width in pixels
+       ))
+      }
     })
     
-    
+   
+
+
     output$boxes <- renderUI({
-      req(input$json_files)
 
       files <- uploaded_files()
       records <- t(sapply(uploaded_files(), function(x) c(records = x$records)))
@@ -220,17 +305,21 @@ uploadServer <- function(id) {
 
 
     })
-    
+
     output$plot_metadata <- renderPlotly({
       req(input$json_files)
       req(input$selected_file)
+      req(uploaded_files())
 
 
       records <- t(sapply(uploaded_files(), function(x) c(records = x$records)))
-      labels <- t(sapply(uploaded_files(), function(x) c(labels = x$label)))
+      labels <- t(sapply(uploaded_files(), function(x) {
+        c(label = if (is.null(x$label)) x$name else x$label)
+      }))
 
       files <- uploaded_files()
       selected_content <- files[[input$selected_file]]
+      if(is.null(selected_content$label)) selected_content$label <- selected_content$name
 
 
       df <- as.data.frame(records)
@@ -268,6 +357,16 @@ uploadServer <- function(id) {
 
     })
     
+    output$visualisation <- renderUI({
+      req(actual_format())
+      req(uploaded_files())
+      if(actual_format() %in% c("json", "ndjson")){
+        plotlyOutput(ns("plot_metadata"))
+      }else{
+        NULL
+      }
+    })
+
 
     return(list(
       uploaded_files = uploaded_files,
