@@ -139,7 +139,9 @@ settingsUI <- function(id) {
           enter = animations$zooming_entrances$zoomIn,
           exit = animations$zooming_exits$zoomOut
         )
-      )
+      
+    ),
+    buttonUI(ns("nav_button"))
     ),
     addSpinner(reactableOutput(ns("reac"), height = "950px"), spin = "rotating-plane")
   )
@@ -435,5 +437,11 @@ settingsServer <- function(id, filtered_data, selected_file) {
         })
       }
     )
+    
+    button_clicked <- buttonServer("nav_button")
+    
+    return(list(
+      navigate_triggered = button_clicked
+    ))
   })
 }

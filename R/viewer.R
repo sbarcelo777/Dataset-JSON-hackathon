@@ -14,17 +14,17 @@ viewerUI <- function(id) {
     layout_columns(
       col_widths = c(3, 9),
       fill = FALSE,
-      navset_card_tab(
-        height = 450,
+      navset_underline(
+        # height = 450,
         # title = "Viewer Tool",
         nav_panel(
           "Data Manipulation",
-          card_title("Chose/Filter Data"),
+          # card_title("Chose/Filter Data"),
           filterUI(ns("filter")),
         ),
         nav_panel(
           "Variable browser",
-          card_title("Variables description"),
+          # card_title("Variables description"),
           varDescriptionUI(ns("var_desc"))
           
         ),
@@ -71,7 +71,8 @@ Taking a moment to review your filters before running them can save you time and
 # 4. Viewer Server 2
 viewerServer <- function(id, upload_data) {
   moduleServer(id, function(input, output, session) {
-
+  
+    ns <- NS(id)
        # Initialize filter module
       filter_results <- filterServer("filter", upload_data$uploaded_files, upload_data$file_format)
 
@@ -80,18 +81,17 @@ viewerServer <- function(id, upload_data) {
                            filter_results$filtered_data,
                            filter_results$selected_file)
 
-      settingsServer("settings",
+      settings_result <- settingsServer("settings",
                      filter_results$filtered_data,
                      filter_results$selected_file)
-
-
-
+      
+  
     # Return values that might be needed by parent module
     return(
       list(
         filtered_data = filter_results$filtered_data,
-        selected_file = filter_results$selected_file
-
+        selected_file = filter_results$selected_file,
+        navigate_request = settings_result$navigate_triggered
       )
     )
   })

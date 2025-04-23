@@ -170,12 +170,14 @@ uploadServer <- function(id) {
           label <- content$label
           name <- content$name
           records <- content$records
+          originator <- content$originator
           
           files_list[[file_name]] <- list(
             label = label,
             name = name,
             records = records,
-            path = file_path
+            path = file_path,
+            originator = originator
           )
           
 
@@ -238,6 +240,8 @@ uploadServer <- function(id) {
     # Display selected JSON content
     output$json_content <- renderUI({
       req(input$selected_file)
+      req(input$selected_file)
+      req(uploaded_files())
       files <- uploaded_files()
       selected_file <- files[[input$selected_file]]
       file_path <- selected_file$path
@@ -357,6 +361,7 @@ uploadServer <- function(id) {
 
     })
     
+
     output$visualisation <- renderUI({
       req(actual_format())
       req(uploaded_files())
