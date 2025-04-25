@@ -196,9 +196,10 @@ settingsServer <- function(id, filtered_data, selected_file) {
     output$dynamic_input_container <- renderUI({
       ns <- session$ns
       # Get the selected column data
-      selected_col <- filtered_data()[,input$variable_picker]
-      
-      if (is.numeric(selected_col)) {
+      selected_col <- filtered_data()[,input$variable_picker, drop = TRUE]
+
+      if (is.numeric(selected_col) || is.integer(selected_col)) {
+        
         # For numeric columns, create a sliderInput
         min_val <- min(selected_col, na.rm = TRUE)
         max_val <- max(selected_col, na.rm = TRUE)

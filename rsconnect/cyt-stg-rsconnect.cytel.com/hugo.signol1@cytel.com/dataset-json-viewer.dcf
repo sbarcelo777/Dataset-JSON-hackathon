@@ -1,0 +1,13 @@
+name: dataset-json-viewer
+title: dataset-json-viewer
+username: hugo.signol1@cytel.com
+account: hugo.signol1@cytel.com
+server: cyt-stg-rsconnect.cytel.com
+hostUrl: https://cyt-stg-rsconnect.cytel.com/__api__
+appId: 21
+bundleId: 39
+url: https://cyt-stg-rsconnect.cytel.com/content/8e1397b8-1ee2-4f03-8f04-0d826e6a5c39/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .RData|.Rprofile|json_cache.db|LICENSE.R|README.html|README.md|setup.R|test_call_api.R|www/json.svg

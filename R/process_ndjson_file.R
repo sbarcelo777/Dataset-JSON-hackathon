@@ -16,6 +16,8 @@ process_ndjson_file <- function(json_data,
   library(DBI)
   library(RSQLite)
 
+  lines <- readLines(json_data$path, encoding = "UTF-8")
+  metadata <- fromJSON(lines[1])
   
   tryCatch({
   #   # Input validation
@@ -23,17 +25,16 @@ process_ndjson_file <- function(json_data,
   #     stop("Invalid JSON data format. Must contain 'columns' and 'rows'")
   #   }
   #   
+    
     # Extract metadata with error checking
-    cols <- json_data$columns$name
+    cols <- metadata$columns$name
     
-    labels <- json_data$columns$label
+    labels <- metadata$columns$label
     
-    datatypes <- json_data$columns$dataType
+    datatypes <- metadata$columns$dataType
     
     
-    
-    lines <- readLines(json_data$datapath, encoding = "UTF-8")
-    
+  
     
     # Extract data (remaining lines are JSON arrays)
     dt <- lapply(lines[-1], fromJSON)
