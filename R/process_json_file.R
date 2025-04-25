@@ -78,7 +78,6 @@ process_json_file <- function(json_data,
     data.table::setnames(dt, cols)
     
     # Apply data types with error handling
-    message("Applying data types...")
     for (j in seq_along(cols)) {
       col <- cols[j]
       dtype <- datatypes[j]
@@ -109,7 +108,6 @@ process_json_file <- function(json_data,
     
     # Database handling
     if (object_size > KB50000) {
-      message("Storing data in SQLite database...")
       tryCatch({
         con <- dbConnect(SQLite(), db_path)
         on.exit(dbDisconnect(con))

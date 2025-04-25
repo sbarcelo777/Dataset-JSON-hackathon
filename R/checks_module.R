@@ -10,17 +10,18 @@ checksUI <- function(id) {
       ),
       nav_panel(
         "SDTM",
-        verbatimTextOutput(ns("debug_sdtm")), # Debug output
-        uiOutput(ns("sdtm_list"))
+        uiOutput(ns("statusCardSDTM")),
+        reactableOutput(ns("sdtm_checks"))
       )
     )
   )
 }
 
-checksServer <- function(id, uploaded_files) {
+checksServer <- function(id, uploaded_files, progress) {
   moduleServer(id, function(input, output, session) {
     
     ns <- NS(id)
+    is_complete <- reactiveVal(FALSE)
     
     url <- "https://cyt-stg-rsconnect.cytel.com/cdisc-compliance-api/cdisc_compliance"
     apiKey <- "eBalEcdbia0bkHgtfBZ7nMsMbAEOTtCw"
@@ -43,10 +44,10 @@ checksServer <- function(id, uploaded_files) {
     
     adam_check_info <- list(
       ADAM001 = list(fun = ADAM001, applicable_to = c("\\ADSL")),  # applies to all except ADSL
-      ADAM004 = list(fun = ADAM004, applicable_to = c("\\ADSL")),  # applies to all except ADSL
-      ADAM006 = list(fun = ADAM006, applicable_to = NULL),  # applies to all 
+      ADAM004 = list(fun = ADAM004, applicable_to = NULL),         # applies to all 
+      ADAM006 = list(fun = ADAM006, applicable_to = NULL),         # applies to all 
       ADAM014 = list(fun = ADAM014, applicable_to = NULL),         # applies to all
-      ADAM015 = list(fun = ADAM015, applicable_to = NULL)  # applies to all
+      ADAM015 = list(fun = ADAM015, applicable_to = NULL)          # applies to all
     )
     
     adam <- reactive({
@@ -60,6 +61,14 @@ checksServer <- function(id, uploaded_files) {
         return(matches)
       }
     })
+    
+    sdtm_check_info <- list(
+      SDTM002 = list(fun = SDTM002, applicable_to = "DM")  # applies to DM
+      # ADAM004 = list(fun = ADAM004, applicable_to = NULL),  # applies to all except ADSL
+      # ADAM006 = list(fun = ADAM006, applicable_to = NULL),  # applies to all 
+      # ADAM014 = list(fun = ADAM014, applicable_to = NULL),  # applies to all
+      # ADAM015 = list(fun = ADAM015, applicable_to = NULL)   # applies to all
+    )
     
     sdtm <- reactive({
       req(uploaded_files())
@@ -102,73 +111,100 @@ checksServer <- function(id, uploaded_files) {
     })
     
     
+    ts_content <- reactive({
+      req(uploaded_files())
+      
+      # Find ADSL file from uploaded files
+      ts <- uploaded_files() %>%
+        purrr::keep(~ .x$name == "TS") %>%
+        purrr::pluck(1)
+      
+      if (length(ts) == 0) {
+        # Log and inform that ADSL is not available
+        message("TS NOT available...")
+        return(NULL)
+      } else {
+        # Try to parse the JSON content with error handling
+        tryCatch({
+          # content <- jsonlite::fromJSON(adsl[[1]]$path, simplifyVector = FALSE)
+          ts <- as.data.frame(process_json_file(ts))
+          
+          # Log success
+          message("TS available...")
+          return(ts)
+        }, error = function(e) {
+          message(paste("Error processing TS file:", e$message))
+          return(NULL)
+        })
+      }
+    })
+    
     # Create a reactiveVal to store the processed ADaM checks
     adam_checks_data <- reactiveVal(NULL)
+    sdtm_checks_data <- reactiveVal(NULL)
     
     # Process ADaM checks when adam() changes
     observe({
-      req(adam())
-      
+      # Check if adam() is NULL
+      if (is.null(adam())) {
+        # Set adam_checks_data to a special value indicating "No Adam"
+        adam_checks_data(data.frame(
+          Result = logical(0),
+          Check_Id = character(0),
+          Check_Description = character(0), 
+          CHeckMessage = character(0),
+          Failed_Datasets = I(list())
+        ))
+        return()  # Exit the observer
+      }
+
       adsl_content <- adsl_content()
+      ts_content <- ts_content()
       
-      adam_checks <- compliance %>%
-        filter(Type %in% c("ADaM", "ADAM")) %>%
-        filter(Check_Id %in% names(adam_check_info)) %>%
-        select(c("Check_Id", "Check_Description", "CHeckMessage"))
+      adam_checks <- run_test(compliance = compliance, 
+                              type_check = c("ADaM", "ADAM"), 
+                              check_info_data = adam_check_info, 
+                              input_data = adam(), 
+                              adsl_content = adsl_content, 
+                              ts_content = ts_content,
+                              progress = progress)
       
-      parsed_jsons <- lapply(adam(), function(x) {
-        content <- tryCatch(fromJSON(x$path, simplifyVector = FALSE), error = function(e) NULL)
-        list(path = x$path, content = content)
-      })
-      
-      # Grab all dataset names (e.g., "ADAE", "ADSL", etc.)
-      all_dataset_names <- vapply(parsed_jsons, function(x) {
-        if (!is.null(x$content)) x$content$name else NA_character_
-      }, character(1))
-      
-      all_dataset_names <- na.omit(unique(all_dataset_names))
-      
-      check_results <- lapply(adam_checks$Check_Id, function(check_id) {
-        check_info <- adam_check_info[[check_id]]
-        if (is.null(check_info)) return(list(Result = FALSE, Failures = list()))  # Return FALSE instead of NA
-        
-        check_fun <- check_info$fun
-        applicable_to <- resolve_applicable(check_info$applicable_to, all_dataset_names)
-        
-        failures <- list()
-        
-        for (entry in parsed_jsons) {
-          content <- entry$content
-          path <- entry$path
-          if (is.null(content)) next
-          
-          dataset_name <- content$name
-          if (!(dataset_name %in% applicable_to)) next
-          
-          if(check_id %in% "ADAM001") result <- check_fun(entry, adsl_content) 
-          if(!check_id %in% "ADAM001") result <- check_fun(entry)
-          
-          if (is.list(result)) {
-            if (!result$pass) {
-              failures[[dataset_name]] <- result$message
-            }
-          } else if (!isTRUE(result)) {
-            failures[[dataset_name]] <- "Failed without detailed reason"
-          }
-        }
-        
-        list(
-          Result = length(failures) == 0,
-          Failures = failures
-        )
-      })
-      
-      adam_checks$Result <- vapply(check_results, function(x) x$Result, logical(1))
-      adam_checks$Failed_Datasets <- I(lapply(check_results, function(x) x$Failures))  # store as list-column
       adam_checks <- adam_checks %>% select(Result, everything())
       
       # Store the processed results
       adam_checks_data(adam_checks)
+    })
+    
+    # Process SDTM checks when adam() changes
+    observe({
+      # Check if sdtm() is NULL
+      if (is.null(sdtm())) {
+        # Set adam_checks_data to a special value indicating "No Adam"
+        sdtm_checks_data(data.frame(
+          Result = logical(0),
+          Check_Id = character(0),
+          Check_Description = character(0), 
+          CHeckMessage = character(0),
+          Failed_Datasets = I(list())
+        ))
+        return()  # Exit the observer
+      }
+      
+      adsl_content <- adsl_content()
+      ts_content <- ts_content()
+      
+      sdtm_checks <- run_test(compliance = compliance, 
+                              type_check = c("SDTM"), 
+                              check_info_data = sdtm_check_info, 
+                              input_data = sdtm(), 
+                              adsl_content = adsl_content, 
+                              ts_content = ts_content,
+                              progress = progress)
+      
+      sdtm_checks <- sdtm_checks %>% select(Result, everything())
+      
+      # Store the processed results
+      sdtm_checks_data(sdtm_checks)
     })
     
     # Create the status card using the reactive data
@@ -217,111 +253,100 @@ checksServer <- function(id, uploaded_files) {
     
     # Render the adam data table using the reactive data
     output$adam_checks <- renderReactable({
+      
+      if (is.null(adam_checks_data()) || nrow(adam_checks_data()) == 0) {
+        return(reactable(
+          data.frame(Message = "No ADaM datasets available"),
+          pagination = FALSE
+        ))
+      }
+      
       req(adam_checks_data())
       
       results_data <- adam_checks_data()
       total_checks <- nrow(results_data)
       passed_checks <- sum(results_data$Result)
+      check_table(results_data)
       
-      reactable::reactable(results_data, 
-                           columns = list(
-                             Result = colDef(name = "",
-                                             width = 50,
-                                             cell = function(value) {
-                                               if (value) {
-                                                 tagList(
-                                                   span(
-                                                     fa_i("circle-check", fill = "green")
-                                                   )
-                                                 )
-                                               } else {
-                                                 tagList(
-                                                   span(
-                                                     fa_i("circle-xmark", fill = "red")
-                                                   )
-                                                 )
-                                               }
-                                             }),
-                             
-                             Check_Id = colDef(name = "", 
-                                               width = 150),
-                             
-                             Check_Description = colDef(name = "Description",
-                                                        width = 400),
-                             
-                             CHeckMessage = colDef(name = "Details"),
-                             
-                             Failed_Datasets = colDef(show = FALSE)
-                           ),
-                           
-                           highlight = TRUE,
-                           outlined = FALSE,
-                           bordered = FALSE,
-                           borderless = FALSE,
-                           striped = TRUE,
-                           compact = TRUE,
-                           resizable = TRUE,
-                           
-                           details = function(index) {
-                             fails <- results_data$Failed_Datasets[[index]]
-                             if (length(fails) == 0) return(NULL)
-                             
-                             # Create a data frame from the list of failures
-                             detail_df <- data.frame(
-                               Dataset = names(fails),
-                               Issue = unlist(fails),
-                               stringsAsFactors = FALSE
-                             )
-                             
-                             # Return a nested reactable with the details
-                             reactable(
-                               detail_df,
-                               columns = list(
-                                 Dataset = colDef(name = "Dataset", minWidth = 150),
-                                 Issue = colDef(name = "Issue Description", minWidth = 300)
-                               ),
-                               fullWidth = TRUE,
-                               borderless = TRUE,
-                               outlined = TRUE,
-                               pagination = FALSE,
-                               minRows = 1
-                             )
-                           },
-                           
-                           rowStyle = JS("
-                       function(rowInfo, state) {
-                         if (rowInfo) {
-                           if (rowInfo.row.Result === true) {
-                             return { backgroundColor: '#e6ffe6' };  // light green
-                           } else {
-                             return { backgroundColor: '#ffe6e6' };  // light red
-                           }
-                         }
-                         return {};
-                       }
-                     ")
-      )
+
     })
     
-    output$sdtm_list <- renderUI({
-      req(sdtm())
+  
+    output$statusCardSDTM <- renderUI({
+      req(sdtm_checks_data())
       
-      names <- t(sapply(sdtm(), function(x) c(name = x$name)))
-      labels <- t(sapply(sdtm(), function(x) c(name = x$label)))
-      # The correct way to display the single adam() object
-      tagList(
-        h4(HTML(paste("File Names:", paste(names, collapse = "<br>")))),
-        # Display data if it exists
-        tableOutput(ns("sdtm_checks"))
-      )
+      results_data <- sdtm_checks_data()
+      total_checks <- nrow(results_data)
+      passed_checks <- sum(results_data$Result)
+      failed_checks <- total_checks - passed_checks
+      
+      if (failed_checks == 0) {
+        card(
+          class = "mt-3 mb-3",
+          card_header(strong("Check Status")),
+          card_body(
+            class = "bg-success-subtle",
+            div(
+              class = "d-flex align-items-center",
+              span(fa_i("circle-check", fill = "green", height = "2em", width = "2em"), class = "me-3"),
+              div(
+                h4("All Checks Passed"),
+                p(sprintf("All %d checks have passed successfully.", total_checks))
+              )
+            )
+          )
+        )
+      } else {
+        card(
+          class = "mt-3 mb-3",
+          card_header(strong("Check Status")),
+          card_body(
+            class = "bg-warning-subtle",
+            div(
+              class = "d-flex align-items-center",
+              span(fa_i("triangle-exclamation", fill = "orange", height = "2em", width = "2em"), class = "me-3"),
+              div(
+                h4("Some Checks Failed"),
+                p(sprintf("%d out of %d checks failed. Please review the details below.", failed_checks, total_checks))
+              )
+            )
+          )
+        )
+      }
     })
     
     # Render the sdtm data table if it exists
-    output$sdtm_checks <- renderTable({
-      req(sdtm())
+    output$sdtm_checks <- renderReactable({
+      
+      if (is.null(sdtm_checks_data()) || nrow(sdtm_checks_data()) == 0) {
+        return(reactable(
+          data.frame(Message = "No SDTM datasets available"),
+          pagination = FALSE
+        ))
+      }
+      
+      req(sdtm_checks_data())
+      
+      results_data <- sdtm_checks_data()
+      total_checks <- nrow(results_data)
+      passed_checks <- sum(results_data$Result)
+      check_table(results_data)
+      
+      
+    })
+    
+    observe({
+      # Check if adam() is not NULL
+        req(adam_checks_data())
+        req(sdtm_checks_data())
+        # Optional: add a small delay to allow rendering to complete
+        shinyjs::delay(300, {
+          # Set reactive value to indicate completion
+          is_complete(TRUE)
+        })
     })
     
     # Return the reactiveVal
-    
+    return(reactive({ is_complete() }))
   })
 }

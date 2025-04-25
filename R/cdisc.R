@@ -1,6 +1,12 @@
 ADAM001 <- function(entry, adsl_content) {
   
-
+if (is.null(adsl_content)) {
+    msg <- paste(
+      "Dataset not found: ADSL"
+    )
+    return(list(pass = FALSE, message = msg))
+}
+  
 content <- as.data.frame(process_json_file(entry))
 
 # Check 2 – Variable copied from ADSL has same value for same USUBJID
@@ -81,7 +87,6 @@ ADAM006 <- function(entry) {
 ADAM014 <- function(entry) {
   content <- entry$content
   name <- content$name
-  message(name)
   prefix <- toupper(substr(name, 1, 2))
   
   if (prefix != "AD") {
@@ -109,5 +114,34 @@ ADAM015 <- function(entry) {
   
   list(pass = TRUE, message = "")
 }
+
+
+
+
+# TS.SSTDTC (Trial Start Datae) is not same as first signed IC date in DM
+SDTM002 <- function(entry, ts_content){
+  if (is.null(ts_content)) {
+    msg <- paste(
+      "Dataset not found: TS"
+    )
+    return(list(pass = FALSE, message = msg))
+  }
+  
+  content <- as.data.frame(process_json_file(entry))
+  first_ic <- min(content$RFICDTC)
+  sstdtc <- ts_content[ts_content$TSPARMCD %in% "SSTDTC","TSVAL"]
+  # sstdtc <- "2012-11-07"
+  
+  if(first_ic != sstdtc){
+    return(list(
+      pass = FALSE,
+      message = paste0("TS.SSTDTC : ", sstdtc, " != than first DM.RFICFTC : ", first_ic)
+    ))
+  }
+  
+  
+  list(pass = TRUE, message = "")
+}
+
 
 
