@@ -1,12 +1,14 @@
 # 3. var_description_module.R
 varDescriptionUI <- function(id) {
   ns <- NS(id)
-  card(
-    full_screen = TRUE,
-    height = 650,
+  page_fluid(
+  #   full_screen = TRUE,
+  #   height = 650,
+    br(),
+    br(),
     pickerInput(
       ns("var_select"), 
-      label = NULL,
+      label = "Live descriptives statistics",
       choices = NULL,
       width = "100%"
     ),
@@ -19,7 +21,7 @@ varDescriptionServer <- function(id, filtered_data, selected_file) {
     
     rv <- reactiveValues(show_outputs = TRUE)
     
-    observeEvent(selected_file(), {
+    observeEvent(selected_file, {
       rv$show_outputs <- FALSE
     })
     
@@ -145,7 +147,10 @@ varDescriptionServer <- function(id, filtered_data, selected_file) {
                           selected = NULL)
             )
           ),
-          plotlyOutput(session$ns(plot_id))
+          card(
+            full_screen = TRUE,
+            plotlyOutput(session$ns(plot_id))
+          )
         )
         
       } else {
@@ -209,7 +214,10 @@ varDescriptionServer <- function(id, filtered_data, selected_file) {
                           selected = NULL)
             )
           ),
-          reactableOutput(session$ns(table_id))
+          card(
+            full_screen = TRUE,
+            reactableOutput(session$ns(table_id))
+          )
         )
       }
     })
