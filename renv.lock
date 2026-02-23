@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "4.2.3",
+    "Version": "4.4.1",
     "Repositories": [
       {
         "Name": "Cytel-Curated-Repository",
@@ -25,7 +25,7 @@
       "Package": "DBI",
       "Version": "1.2.3",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/__linux__/centos7/latest",
       "Requirements": [
         "R",
         "methods"
@@ -36,7 +36,7 @@
       "Package": "DT",
       "Version": "0.33",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/__linux__/centos7/latest",
       "Requirements": [
         "crosstalk",
         "htmltools",
@@ -51,7 +51,7 @@
     },
     "MASS": {
       "Package": "MASS",
-      "Version": "7.3-58.2",
+      "Version": "7.3-60.2",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -62,15 +62,16 @@
         "stats",
         "utils"
       ],
-      "Hash": "e02d1a0f6122fd3e634b25b433704344"
+      "Hash": "2f342c46163b0b54d7b64d1f798e2c78"
     },
     "Matrix": {
       "Package": "Matrix",
-      "Version": "1.5-3",
+      "Version": "1.7-0",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
         "R",
+        "grDevices",
         "graphics",
         "grid",
         "lattice",
@@ -78,24 +79,13 @@
         "stats",
         "utils"
       ],
-      "Hash": "4006dffe49958d2dd591c17e61e60591"
-    },
-    "PKI": {
-      "Package": "PKI",
-      "Version": "0.1-14",
-      "Source": "Repository",
-      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/__linux__/centos7/latest",
-      "Requirements": [
-        "R",
-        "base64enc"
-      ],
-      "Hash": "f5b9c6b2f62f1fa3dd53fd1ddccbb241"
+      "Hash": "1920b2f11133b12350024297d8a4ff4a"
     },
     "R6": {
       "Package": "R6",
       "Version": "2.5.1",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R"
       ],
@@ -105,7 +95,7 @@
       "Package": "RColorBrewer",
       "Version": "1.1-3",
       "Source": "Repository",
-      "Repository": "Cytel-CRAN",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R"
       ],
@@ -115,7 +105,7 @@
       "Package": "RSQLite",
       "Version": "2.3.7",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "Cytel-CRAN",
       "Requirements": [
         "DBI",
         "R",
@@ -134,7 +124,7 @@
       "Package": "Rcpp",
       "Version": "1.0.13",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/__linux__/centos7/2024-10-28",
       "Requirements": [
         "methods",
         "utils"
@@ -145,7 +135,7 @@
       "Package": "askpass",
       "Version": "1.2.1",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "sys"
       ],
@@ -155,7 +145,7 @@
       "Package": "base64enc",
       "Version": "0.1-3",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R"
       ],
@@ -189,7 +179,7 @@
       "Package": "blob",
       "Version": "1.2.4",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/__linux__/centos7/latest",
       "Requirements": [
         "methods",
         "rlang",
@@ -201,7 +191,7 @@
       "Package": "bsicons",
       "Version": "0.1.2",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "Cytel-CRAN",
       "Requirements": [
         "R",
         "cli",
@@ -215,7 +205,7 @@
       "Package": "bslib",
       "Version": "0.8.0",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R",
         "base64enc",
@@ -237,7 +227,7 @@
       "Package": "cachem",
       "Version": "1.1.0",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "fastmap",
         "rlang"
@@ -248,7 +238,7 @@
       "Package": "cli",
       "Version": "3.6.3",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R",
         "utils"
@@ -259,7 +249,7 @@
       "Package": "clipr",
       "Version": "0.8.0",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "utils"
       ],
@@ -269,7 +259,7 @@
       "Package": "colorspace",
       "Version": "2.1-1",
       "Source": "Repository",
-      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/__linux__/centos7/latest",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R",
         "grDevices",
@@ -283,14 +273,14 @@
       "Package": "commonmark",
       "Version": "1.9.2",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/__linux__/centos7/2024-10-28",
       "Hash": "14eb0596f987c71535d07c3aff814742"
     },
     "cpp11": {
       "Package": "cpp11",
       "Version": "0.5.0",
       "Source": "Repository",
-      "Repository": "https://cyt-prd-rspm.cytel.com/Cytel-Curated-Repository/__linux__/centos7/2024-10-24+P20_bF8Y",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R"
       ],
@@ -300,7 +290,7 @@
       "Package": "crayon",
       "Version": "1.5.3",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "grDevices",
         "methods",
@@ -312,7 +302,7 @@
       "Package": "crosstalk",
       "Version": "1.2.1",
       "Source": "Repository",
-      "Repository": "Cytel-CRAN",
+      "Repository": "Cytel-Curated-Repository",
       "Requirements": [
         "R6",
         "htmltools",
@@ -325,7 +315,7 @@
       "Package": "curl",
       "Version": "5.2.3",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R"
       ],
@@ -346,7 +336,7 @@
       "Package": "digest",
       "Version": "0.6.37",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R",
         "utils"
@@ -380,7 +370,7 @@
       "Package": "evaluate",
       "Version": "1.0.1",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R"
       ],
@@ -390,7 +380,7 @@
       "Package": "fansi",
       "Version": "1.0.6",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R",
         "grDevices",
@@ -402,21 +392,21 @@
       "Package": "farver",
       "Version": "2.1.2",
       "Source": "Repository",
-      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/__linux__/centos7/latest",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Hash": "680887028577f3fa2a81e410ed0d6e42"
     },
     "fastmap": {
       "Package": "fastmap",
       "Version": "1.2.0",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Hash": "aa5e1cd11c2d15497494c5292d7ffcc8"
     },
     "fontawesome": {
       "Package": "fontawesome",
       "Version": "0.5.2",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R",
         "htmltools",
@@ -428,7 +418,7 @@
       "Package": "forcats",
       "Version": "1.0.0",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "Cytel-Curated-Repository",
       "Requirements": [
         "R",
         "cli",
@@ -444,7 +434,7 @@
       "Package": "fs",
       "Version": "1.6.4",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R",
         "methods"
@@ -455,7 +445,7 @@
       "Package": "generics",
       "Version": "0.1.3",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R",
         "methods"
@@ -466,7 +456,7 @@
       "Package": "ggplot2",
       "Version": "3.5.1",
       "Source": "Repository",
-      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/__linux__/centos7/latest",
+      "Repository": "Cytel-Curated-Repository",
       "Requirements": [
         "MASS",
         "R",
@@ -491,7 +481,7 @@
       "Package": "glue",
       "Version": "1.8.0",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R",
         "methods"
@@ -502,7 +492,7 @@
       "Package": "gtable",
       "Version": "0.3.6",
       "Source": "Repository",
-      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/__linux__/centos7/latest",
+      "Repository": "Cytel-Curated-Repository",
       "Requirements": [
         "R",
         "cli",
@@ -518,7 +508,7 @@
       "Package": "haven",
       "Version": "2.5.4",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "Cytel-Curated-Repository",
       "Requirements": [
         "R",
         "cli",
@@ -539,7 +529,7 @@
       "Package": "highr",
       "Version": "0.11",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R",
         "xfun"
@@ -550,7 +540,7 @@
       "Package": "hms",
       "Version": "1.1.3",
       "Source": "Repository",
-      "Repository": "Cytel-CRAN",
+      "Repository": "Cytel-Curated-Repository",
       "Requirements": [
         "lifecycle",
         "methods",
@@ -564,7 +554,7 @@
       "Package": "htmltools",
       "Version": "0.5.8.1",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R",
         "base64enc",
@@ -580,7 +570,7 @@
       "Package": "htmlwidgets",
       "Version": "1.6.4",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/__linux__/centos7/2024-10-28",
       "Requirements": [
         "grDevices",
         "htmltools",
@@ -595,7 +585,7 @@
       "Package": "httpuv",
       "Version": "1.6.15",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/__linux__/centos7/2024-10-28",
       "Requirements": [
         "R",
         "R6",
@@ -610,7 +600,7 @@
       "Package": "httr",
       "Version": "1.4.7",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/__linux__/centos7/2024-10-28",
       "Requirements": [
         "R",
         "R6",
@@ -625,7 +615,7 @@
       "Package": "isoband",
       "Version": "0.2.7",
       "Source": "Repository",
-      "Repository": "Cytel-CRAN",
+      "Repository": "Cytel-Curated-Repository",
       "Requirements": [
         "grid",
         "utils"
@@ -636,7 +626,7 @@
       "Package": "jquerylib",
       "Version": "0.1.4",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "htmltools"
       ],
@@ -646,7 +636,7 @@
       "Package": "jsonlite",
       "Version": "1.8.9",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "methods"
       ],
@@ -656,7 +646,7 @@
       "Package": "knitr",
       "Version": "1.48",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R",
         "evaluate",
@@ -672,7 +662,7 @@
       "Package": "labeling",
       "Version": "0.4.3",
       "Source": "Repository",
-      "Repository": "Cytel-CRAN",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "graphics",
         "stats"
@@ -701,7 +691,7 @@
       "Package": "later",
       "Version": "1.3.2",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/__linux__/centos7/2024-10-28",
       "Requirements": [
         "Rcpp",
         "rlang"
@@ -710,7 +700,7 @@
     },
     "lattice": {
       "Package": "lattice",
-      "Version": "0.20-45",
+      "Version": "0.22-6",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -721,13 +711,13 @@
         "stats",
         "utils"
       ],
-      "Hash": "b64cdbb2b340437c4ee047a1f4c4377b"
+      "Hash": "cc5ac1ba4c238c7ca9fa6a87ca11a7e2"
     },
     "lazyeval": {
       "Package": "lazyeval",
       "Version": "0.2.2",
       "Source": "Repository",
-      "Repository": "Cytel-CRAN",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/__linux__/centos7/2024-10-28",
       "Requirements": [
         "R"
       ],
@@ -737,7 +727,7 @@
       "Package": "lifecycle",
       "Version": "1.0.4",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R",
         "cli",
@@ -750,7 +740,7 @@
       "Package": "logger",
       "Version": "0.4.0",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/__linux__/centos7/2024-10-28",
       "Requirements": [
         "R",
         "utils"
@@ -761,7 +751,7 @@
       "Package": "magrittr",
       "Version": "2.0.3",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R"
       ],
@@ -771,7 +761,7 @@
       "Package": "memoise",
       "Version": "2.0.1",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "cachem",
         "rlang"
@@ -780,7 +770,7 @@
     },
     "mgcv": {
       "Package": "mgcv",
-      "Version": "1.8-42",
+      "Version": "1.9-1",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -793,13 +783,13 @@
         "stats",
         "utils"
       ],
-      "Hash": "3460beba7ccc8946249ba35327ba902a"
+      "Hash": "110ee9d83b496279960e162ac97764ce"
     },
     "mime": {
       "Package": "mime",
       "Version": "0.12",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "tools"
       ],
@@ -809,7 +799,7 @@
       "Package": "munsell",
       "Version": "0.5.1",
       "Source": "Repository",
-      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/__linux__/centos7/latest",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "colorspace",
         "methods"
@@ -818,7 +808,7 @@
     },
     "nlme": {
       "Package": "nlme",
-      "Version": "3.1-162",
+      "Version": "3.1-164",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -828,35 +818,23 @@
         "stats",
         "utils"
       ],
-      "Hash": "0984ce8da8da9ead8643c5cbbb60f83e"
+      "Hash": "a623a2239e642806158bc4dc3f51565d"
     },
     "openssl": {
       "Package": "openssl",
       "Version": "2.2.2",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "askpass"
       ],
       "Hash": "d413e0fef796c9401a4419485f709ca1"
     },
-    "packrat": {
-      "Package": "packrat",
-      "Version": "0.9.2",
-      "Source": "Repository",
-      "Repository": "Cytel-CRAN",
-      "Requirements": [
-        "R",
-        "tools",
-        "utils"
-      ],
-      "Hash": "55ddd2d4a1959535f18393478b0c14a6"
-    },
     "pillar": {
       "Package": "pillar",
       "Version": "1.9.0",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "cli",
         "fansi",
@@ -873,7 +851,7 @@
       "Package": "pkgconfig",
       "Version": "2.0.3",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "utils"
       ],
@@ -883,14 +861,14 @@
       "Package": "plogr",
       "Version": "0.2.0",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/__linux__/centos7/latest",
       "Hash": "09eb987710984fc2905c7129c7d85e65"
     },
     "plotly": {
       "Package": "plotly",
       "Version": "4.10.4",
       "Source": "Repository",
-      "Repository": "Cytel-CRAN",
+      "Repository": "Cytel-Curated-Repository",
       "Requirements": [
         "R",
         "RColorBrewer",
@@ -922,7 +900,7 @@
       "Package": "prettyunits",
       "Version": "1.2.0",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/__linux__/centos7/2024-10-28",
       "Requirements": [
         "R"
       ],
@@ -932,7 +910,7 @@
       "Package": "progress",
       "Version": "1.2.3",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "Cytel-Curated-Repository",
       "Requirements": [
         "R",
         "R6",
@@ -946,7 +924,7 @@
       "Package": "promises",
       "Version": "1.3.0",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/__linux__/centos7/2024-10-28",
       "Requirements": [
         "R6",
         "Rcpp",
@@ -962,7 +940,7 @@
       "Package": "purrr",
       "Version": "1.0.2",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R",
         "cli",
@@ -977,7 +955,7 @@
       "Package": "rappdirs",
       "Version": "0.3.3",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R"
       ],
@@ -987,7 +965,7 @@
       "Package": "reactR",
       "Version": "0.6.1",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "Cytel-Curated-Repository",
       "Requirements": [
         "htmltools"
       ],
@@ -997,7 +975,7 @@
       "Package": "reactable",
       "Version": "0.4.4",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "Cytel-Curated-Repository",
       "Requirements": [
         "R",
         "digest",
@@ -1012,7 +990,7 @@
       "Package": "readr",
       "Version": "2.1.5",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "Cytel-Curated-Repository",
       "Requirements": [
         "R",
         "R6",
@@ -1045,7 +1023,7 @@
       "Package": "rlang",
       "Version": "1.1.4",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R",
         "utils"
@@ -1056,7 +1034,7 @@
       "Package": "rmarkdown",
       "Version": "2.28",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R",
         "bslib",
@@ -1075,41 +1053,11 @@
       ],
       "Hash": "062470668513dcda416927085ee9bdc7"
     },
-    "rsconnect": {
-      "Package": "rsconnect",
-      "Version": "1.3.1",
-      "Source": "Repository",
-      "Repository": "Cytel-CRAN",
-      "Requirements": [
-        "PKI",
-        "R",
-        "cli",
-        "curl",
-        "digest",
-        "jsonlite",
-        "lifecycle",
-        "openssl",
-        "packrat",
-        "renv",
-        "rlang",
-        "rstudioapi",
-        "tools",
-        "yaml"
-      ],
-      "Hash": "90dc9ac04cec50f25657b077d4aaca57"
-    },
-    "rstudioapi": {
-      "Package": "rstudioapi",
-      "Version": "0.17.1",
-      "Source": "Repository",
-      "Repository": "RSPM",
-      "Hash": "5f90cd73946d706cfe26024294236113"
-    },
     "sass": {
       "Package": "sass",
       "Version": "0.4.9",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R6",
         "fs",
@@ -1123,7 +1071,7 @@
       "Package": "scales",
       "Version": "1.3.0",
       "Source": "Repository",
-      "Repository": "Cytel-CRAN",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R",
         "R6",
@@ -1143,7 +1091,7 @@
       "Package": "shiny",
       "Version": "1.9.1",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/__linux__/centos7/2024-10-28",
       "Requirements": [
         "R",
         "R6",
@@ -1193,7 +1141,7 @@
       "Package": "sourcetools",
       "Version": "0.1.7-1",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/__linux__/centos7/2024-10-28",
       "Requirements": [
         "R"
       ],
@@ -1203,7 +1151,7 @@
       "Package": "stringi",
       "Version": "1.8.4",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R",
         "stats",
@@ -1216,7 +1164,7 @@
       "Package": "stringr",
       "Version": "1.5.1",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R",
         "cli",
@@ -1233,14 +1181,14 @@
       "Package": "sys",
       "Version": "3.4.3",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Hash": "de342ebfebdbf40477d0758d05426646"
     },
     "tibble": {
       "Package": "tibble",
       "Version": "3.2.1",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R",
         "fansi",
@@ -1259,7 +1207,7 @@
       "Package": "tidyr",
       "Version": "1.3.1",
       "Source": "Repository",
-      "Repository": "Cytel-CRAN",
+      "Repository": "Cytel-Curated-Repository",
       "Requirements": [
         "R",
         "cli",
@@ -1282,7 +1230,7 @@
       "Package": "tidyselect",
       "Version": "1.2.1",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R",
         "cli",
@@ -1298,7 +1246,7 @@
       "Package": "tinytex",
       "Version": "0.53",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "xfun"
       ],
@@ -1308,7 +1256,7 @@
       "Package": "tzdb",
       "Version": "0.4.0",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "Cytel-Curated-Repository",
       "Requirements": [
         "R",
         "cpp11"
@@ -1319,7 +1267,7 @@
       "Package": "utf8",
       "Version": "1.2.4",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R"
       ],
@@ -1329,7 +1277,7 @@
       "Package": "vctrs",
       "Version": "0.6.5",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R",
         "cli",
@@ -1343,7 +1291,7 @@
       "Package": "viridisLite",
       "Version": "0.4.2",
       "Source": "Repository",
-      "Repository": "Cytel-CRAN",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R"
       ],
@@ -1353,7 +1301,7 @@
       "Package": "vroom",
       "Version": "1.6.5",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "Cytel-Curated-Repository",
       "Requirements": [
         "R",
         "bit64",
@@ -1379,7 +1327,7 @@
       "Package": "withr",
       "Version": "3.0.1",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R",
         "grDevices",
@@ -1391,7 +1339,7 @@
       "Package": "xfun",
       "Version": "0.48",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Requirements": [
         "R",
         "grDevices",
@@ -1416,7 +1364,7 @@
       "Package": "yaml",
       "Version": "2.3.10",
       "Source": "Repository",
-      "Repository": "Cytel-Curated-Repository",
+      "Repository": "https://cyt-prd-rspm.cytel.com/cytel-cran/2024-10-28",
       "Hash": "51dab85c6c98e50a18d7551e9d49f76c"
     }
   }

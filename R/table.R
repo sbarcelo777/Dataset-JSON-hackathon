@@ -1,7 +1,5 @@
-
-
 # Updated Table Module UI
-settingsUI <- function(id) {
+tableUI <- function(id) {
   ns <- NS(id)
   
   css <- "
@@ -122,7 +120,7 @@ settingsUI <- function(id) {
           ),
           update = "change",
           hue = FALSE,
-      
+          
           interaction = list(
             hex= FALSE,
             rgba = FALSE,
@@ -141,12 +139,14 @@ settingsUI <- function(id) {
         )
       )
     ),
-    addSpinner(reactableOutput(ns("reac"), height = "950px"), spin = "rotating-plane")
+    addSpinner(reactableOutput(ns("reac")
+                               , height = "1000px"
+    ), spin = "rotating-plane")
   )
 }
 
 # Updated Table Module Server
-settingsServer <- function(id, filtered_data, selected_file) {
+tableServer <- function(id, filtered_data, selected_file) {
   moduleServer(id, function(input, output, session) {
     
     data_ready <- reactiveVal(FALSE)
@@ -179,7 +179,7 @@ settingsServer <- function(id, filtered_data, selected_file) {
                           `actions-box` = FALSE,
                           `multiple-separator` = " | ",
                           `max-options` = 3,
-                           `max-options-text` = "Please chose only 3"
+                          `max-options-text` = "Please chose only 3"
                         ))
       updatePickerInput(session,
                         "variable_picker",
@@ -197,7 +197,7 @@ settingsServer <- function(id, filtered_data, selected_file) {
       ns <- session$ns
       # Get the selected column data
       selected_col <- filtered_data()[,input$variable_picker, drop = TRUE]
-
+      
       if (is.numeric(selected_col) || is.integer(selected_col)) {
         
         # For numeric columns, create a sliderInput
@@ -273,7 +273,7 @@ settingsServer <- function(id, filtered_data, selected_file) {
       if (nrow(data) < 1 || ncol(data) < 1) {
         return(NULL)
       }
-
+      
       column_labels <- attr(data, "labels")
       label_list <- if (is.null(column_labels)) {
         list()
@@ -284,15 +284,15 @@ settingsServer <- function(id, filtered_data, selected_file) {
       }
       
       col_sticky <- input$sticky_picker
-
+      
       colDefs <- lapply(names(data), function(name) {
         # Safely handle column data
         col_data <- tryCatch({
           data[[name]]
         }, error = function(e) NULL)
-
+        
         if (is.null(col_data)) return(NULL)
-
+        
         if (is.numeric(col_data)) {
           # Safe check for valid numeric data
           if (length(col_data) > 0 && sum(!is.na(col_data)) > 0) {
@@ -337,18 +337,18 @@ settingsServer <- function(id, filtered_data, selected_file) {
           )
         }
       })
-
+      
       # Remove NULL entries
       colDefs <- Filter(Negate(is.null), colDefs)
       names(colDefs) <- names(data)[seq_along(colDefs)]
       colDefs
     }
-  
+    
     output$reac <- renderReactable({
       req(debounced_data(), data_ready(), input$column_picker)
       
       data <- processed_data()
-
+      
       
       # Create table with error handling
       tryCatch({
@@ -412,15 +412,15 @@ settingsServer <- function(id, filtered_data, selected_file) {
     })
     
     name <- reactive({
-      req(selected_file())
-      selected_name_label <- strsplit(selected_file(), "-->")[[1]]
+      req(selected_file)
+      selected_name_label <- strsplit(selected_file, "-->")[[1]]
       selected_name <- selected_name_label[1]
       return(selected_name)
     })
     
     # Download handler with safety checks
     output$download_data <- downloadHandler(
-     
+      
       filename = function() {
         paste0(name(),"_", format(Sys.Date(), "%Y%m%d"), ".csv")
       },

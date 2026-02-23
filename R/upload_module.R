@@ -211,7 +211,10 @@ uploadServer <- function(id) {
         }else if (input$file_format == "sas7bdat"){
           logger::log_info(paste0("Uploaded file : "), file_name)
           
-          content <- haven::read_sas(file_path, encoding = "UTF-8")
+          logger::log_info(paste0("file path: ",file_path))
+          content <- haven::read_sas(file_path
+                                     # , encoding = "UTF-8"
+                                     )
           label <- attr(content, "label")
           name <- toupper(sub("\\.SAS7BDAT$", "", file_name, ignore.case = TRUE))
           
